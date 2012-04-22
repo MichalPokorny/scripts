@@ -1,0 +1,17 @@
+#!/bin/bash
+TODOS_FILE="todos"
+
+if [ -d app ]; then
+	cd app
+	source $0
+	cd ..
+else
+	ack todo -i .
+fi
+
+if [ -f "$TODOS_FILE" ]; then
+	echo
+	ack -i todo "$TODOS_FILE"
+fi
+
+

@@ -1,0 +1,5 @@
+#!/bin/bash
+TEHDY=`date -d $1 +%s`
+TED=`date +%s`
+
+echo $((TEHDY-TED))

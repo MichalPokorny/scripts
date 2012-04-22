@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Oprava: uz to dela MD5 jenom linearne-krat.
+
+if [ $# -lt 1 ]
+then echo "Pouziti: $0 adresar"; exit; fi
+
+soubory="";
+#vec=`find $1 -type f -exec md5sum "{}" \;`;
+
+exmd5ka=""
+last=""
+first=false
+
+find $1 -type f -exec md5sum "{}" \; | sort | while read line; do
+	#echo "{"$line"}"
+	name=`echo $line | cut -d ' ' -f 2-`
+	md5=`echo $line | cut -d ' ' -f 1`
+	#echo "["$name"] => ["$md5"]"
+	if [ "$exmd5ka" == "$md5" ]
+	then
+		if [ ! "$last" == "" ]
+		then
+			if $first
+			then
+				echo;
+			fi
+			first=true
+			echo -n "$last";
+			last=""
+		fi
+		echo -n " $name";
+	else
+		#if [ ! "$exmd5ka" == "" ]
+		#then
+		#	echo;
+		#fi
+		last="$name";
+		#echo -n "$name";
+	fi
+	exmd5ka=$md5
+done
+echo
+exit
