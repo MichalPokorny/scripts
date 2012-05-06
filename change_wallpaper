@@ -1,3 +1,8 @@
 #!/bin/bash
-WALLPAPER=`ls ~/wallpapers | sort --random-sort | head -1`
+
+if [ "$#" -eq 0 ]; then
+	WALLPAPER=`ls ~/wallpapers | sort --random-sort | head -1`
+else
+	WALLPAPER="$1"
+fi
 feh --bg-fill ~/wallpapers/$WALLPAPER
