@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# TODO: delete old backups automagically
+
+BACKUP_DIRECTORY=/home/prvak/backup
+
+[ ! -d "$BACKUP_DIRECTORY" ] && mkdir "$BACKUP_DIRECTORY";
+
+if [ $# == 1 ]; then
+	SYMLINK=$BACKUP_DIRECTORY/`basename "$1"`
+	if [ -a "$SYMLINK" ]; then
+		echo "$SYMLINK already exists."
+		exit 1
+	fi
+	#ln "$1" "$SYMLINK"
+	ln -s "$1" "$SYMLINK"
+	exit
+fi
+
+RUSER=prvak
+RHOST=rny.cz
+RPATH=/home/prvak/backup
+
+TMPDIR=/tmp/backup
+LOG=/tmp/backup_log
+APATH=$TMPDIR/`date +%y%m%d-%H%M.tar.bz2`
+CPATH=$APATH.gpg
+
+mkdir -p "$TMPDIR"
+
+echo "Backup at `date +%Y`, `date +%d.%m`, `date +%H:%M`" >> "$LOG"
+
+#if [ -d /tmp/backup ]; then umount /tmp/backup; rmdir /tmp/backup; fi
+#mount -t tmpfs -o size=2G,mode=0777 tmpfs /tmp/backup
+
+#echo "Tarring..."
+#tar -C /home/prvak --recursion --dereference -cf - backup | bzip2 -9 > $APATH
+
+#echo "Encrypting..."
+#cat /home/prvak/cron_backup_secret | gpg --batch --passphrase-fd 0 -c $APATH
+
+#echo "Sending..."
+#rsync -avzL --progress -e ssh $CPATH $RUSER@$RHOST:$RPATH
+
+SSH_HOST="$RUSER@$RHOST"
+
+rsync -a --compress --copy-links --progress -e ssh "$BACKUP_DIRECTORY" $SSH_HOST:$RPATH
+ssh $SSH_HOST tar --recursion -cf - "$RPATH/backup" -j \> "$RPATH/`date +%Y%m%d%H%M.tar.bz2`"
+
+echo "Done on `date +%Y`, `date +%d.%m`, `date +%H:%M`." >> "$LOG"
+
+rm -rf "$TMPDIR"
+
+#umount /tmp/backup
