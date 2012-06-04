@@ -3,8 +3,23 @@
 # TODO: delete old backups automagically
 
 BACKUP_DIRECTORY=/home/prvak/backup
+DO_ARCHIVE=0
+DO_ENCRYPTION=0
+KEEP_REMOTE_COPY=1
+SECRET="`cat /home/prvak/backup_secret`"
 
-[ ! -d "$BACKUP_DIRECTORY" ] && mkdir "$BACKUP_DIRECTORY";
+# TODO: unsafe: processes are public...
+if [ "$1" == "--decrypt" ]; then
+	FILE="$2"
+	TARGET=`basename -s .gpg "$FILE"`
+	if [ "$TARGET" == "$2" ]; then
+		TARGET="$TARGET-decrypted.tar.bz2"
+	fi
+	echo "$SECRET" | gpg --batch --passphrase-fd 0 --decrypt "$FILE" > "$TARGET"
+	exit
+fi
+
+[ ! -d "$BACKUP_DIRECTORY" ] && mkdir "$BACKUP_DIRECTORY"
 
 if [ $# == 1 ]; then
 	SYMLINK=$BACKUP_DIRECTORY/`basename "$1"`
@@ -37,15 +52,40 @@ echo "Backup at `date +%Y`, `date +%d.%m`, `date +%H:%M`" >> "$LOG"
 #tar -C /home/prvak --recursion --dereference -cf - backup | bzip2 -9 > $APATH
 
 #echo "Encrypting..."
-#cat /home/prvak/cron_backup_secret | gpg --batch --passphrase-fd 0 -c $APATH
+#cat /home/prvak/backup_secret | gpg --batch --passphrase-fd 0 -c $APATH
 
 #echo "Sending..."
 #rsync -avzL --progress -e ssh $CPATH $RUSER@$RHOST:$RPATH
 
 SSH_HOST="$RUSER@$RHOST"
 
-rsync -a --compress --copy-links --progress -e ssh "$BACKUP_DIRECTORY" $SSH_HOST:$RPATH
-ssh $SSH_HOST tar --recursion -cf - "$RPATH/backup" -j \> "$RPATH/`date +%Y%m%d%H%M.tar.bz2`"
+# TODO: TAR only if changed
+
+rsync -a --chmod=u=rwx,g=,o= --compress --copy-links --progress -e ssh "$BACKUP_DIRECTORY" $SSH_HOST:$RPATH
+BACKUP_FILE="$RPATH/`date +%Y%m%d%H%M.tar.bz2`"
+TAR="tar --recursion -cf - \\\"$RPATH/backup\\\" -j > \\\"$BACKUP_FILE\\\""
+ENCRYPT="echo \\\"$SECRET\\\" | gpg --batch --passphrase-fd 0 -c \\\"$BACKUP_FILE\\\""
+
+COMMANDS="[]"
+
+if [ $DO_ARCHIVE == 1 ]; then
+	COMMANDS="$COMMANDS; $TAR"
+
+	if [ $DO_ENCRYPTION == 1 ]; then
+		COMMANDS="$COMMANDS; $ENCRYPT; rm \\\"$BACKUP_FILE\\\"; rm -rf \\\"$RPATH/backup\\\""
+	fi
+
+	if [ $KEEP_REMOTE_COPY != 1 ]; then
+		COMMANDS="$COMMANDS; rm -rf \\\"$RPATH/backup\\\""
+	fi
+fi
+
+SSH="ssh $SSH_HOST bash -c \"$COMMANDS\""
+
+if [ "$COMMANDS" != "[]" ]; then
+	echo $SSH
+	$SSH
+fi
 
 echo "Done on `date +%Y`, `date +%d.%m`, `date +%H:%M`." >> "$LOG"
 
