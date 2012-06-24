@@ -1,0 +1,13 @@
+#!/usr/bin/ruby
+
+require 'mail'
+
+$stderr.reopen("/home/prvak/err.txt", "w")
+
+mail = Mail.read File.open("/tmp/hlavicky")
+string = "#{mail.from.join ','}: #{mail.subject}"
+puts string
+
+File.delete "/tmp/hlavicky"
+
+exec "xosdutilctl", "echo", string
