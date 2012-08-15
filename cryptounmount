@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [[ $EUID -ne 0 ]]; then
+	sudo $0;
+	exit
+fi
+
+umount /home/prvak/crypto
+umount /home/prvak/downloads
+umount /mnt/crypto
+cryptsetup luksClose crypto
