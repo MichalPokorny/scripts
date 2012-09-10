@@ -2,10 +2,7 @@
 
 require 'mail'
 
-mail = Mail.read File.open("/tmp/hlavicky")
+mail = Mail.read_from_string STDIN.lines.to_a.join("")
 string = "#{mail.from.join ','}: #{mail.subject}"
-puts string
-
-File.delete "/tmp/hlavicky"
 
 exec "xosdutilctl", "echo", string

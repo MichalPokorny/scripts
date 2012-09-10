@@ -15,6 +15,9 @@ if [ "$1" == "--decrypt" ]; then
 	if [ "$TARGET" == "$2" ]; then
 		TARGET="$TARGET-decrypted.tar.bz2"
 	fi
+
+	# TODO: cat "secret_file" | gpg ...
+	# TODO: check file existence
 	echo "$SECRET" | gpg --batch --passphrase-fd 0 --decrypt "$FILE" > "$TARGET"
 	exit
 fi
