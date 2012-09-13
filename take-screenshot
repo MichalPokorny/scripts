@@ -1,0 +1,5 @@
+#!/bin/bash
+# TODO: save outside home?
+FILE=~prvak/`date +scrot-%Y-%m-%d-%H:%M:%S.png`
+scrot $FILE
+xosdutilctl echo "screen shot saved: `basename $FILE`"
