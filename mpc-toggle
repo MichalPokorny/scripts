@@ -1,0 +1,8 @@
+#!/bin/bash
+
+STATE=`mpc | head -n 2 | tail -n 1 | cut -d\  -f1`
+if [ $STATE == "[paused]" ]; then
+	mpc play
+else
+	mpc pause
+fi
