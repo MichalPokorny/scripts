@@ -10,4 +10,4 @@ killall dhcpcd
 killall wpa_supplicant
 ifconfig eth0 up
 wpa_supplicant -Dwired -ieth0 -c/etc/wpa_supplicant/kolejnet.conf -B
-dhcpcd eth0
+dhcpcd eth0 -t 120
