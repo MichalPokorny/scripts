@@ -1,11 +1,13 @@
 #!/bin/bash
 
+DEVICE="/dev/sda6"
+
 if [[ $EUID -ne 0 ]]; then
 	sudo $0;
 	exit
 fi
 
-cryptsetup luksOpen /dev/sda7 crypto
+cryptsetup luksOpen /dev/sda6 crypto
 mount /dev/mapper/crypto /mnt/crypto
 mount -o bind /mnt/crypto/downloads /home/prvak/downloads
 mount -o bind /mnt/crypto/crypto /home/prvak/crypto
