@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [ $# != 1 ]; then
+	echo "Usage: $0 [directory]"
+	exit
+fi
+
+mkdir -p "$1"
+
+TARGET_DIRECTORY="$1"
+
+RUSER=prvak
+RHOST=rny.cz
+RPATH=/home/prvak/backup
+
+rsync "$RUSER@$RHOST:$RPATH/backup" "$TARGET_DIRECTORY" -avz --progress
