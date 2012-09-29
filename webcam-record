@@ -5,4 +5,4 @@ gst-launch-0.10 -e v4l2src ! \
    tee name="splitter" ! queue ! \
    xvimagesink sync=false splitter. ! \
    queue ! \
-   theoraenc bitrate=256 ! oggmux ! filesink location=webcam.ogg
+   theoraenc bitrate=1024 ! oggmux ! filesink location=webcam.ogg
