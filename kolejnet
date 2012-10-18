@@ -5,7 +5,8 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-rc.d stop wicd
+macchanger eth0 -m 2C:41:38:05:51:08
+systemctl stop wicd
 killall dhcpcd
 killall wpa_supplicant
 ifconfig eth0 up
