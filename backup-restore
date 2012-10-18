@@ -14,3 +14,6 @@ RHOST=rny.cz
 RPATH=/home/prvak/backup
 
 rsync "$RUSER@$RHOST:$RPATH/backup" "$TARGET_DIRECTORY" -avz --progress
+
+echo "REMEMBER TO RESTORE /etc MANUALLY!"
+echo "Also music, movies, ..."

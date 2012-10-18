@@ -7,6 +7,7 @@ DO_ARCHIVE=0
 DO_ENCRYPTION=0
 KEEP_REMOTE_COPY=1
 SECRET="`cat /home/prvak/backup_secret`"
+XOSD_ECHO="/home/prvak/bin/xosdutilctl echo"
 
 # TODO: unsafe: processes are public...
 if [ "$1" == "--decrypt" ]; then
@@ -38,6 +39,7 @@ fi
 RUSER=prvak
 RHOST=rny.cz
 RPATH=/home/prvak/backup
+RETCPATH=/home/prvak/backup-etc
 
 TMPDIR=/tmp/backup
 LOG=/tmp/backup_log
@@ -65,6 +67,13 @@ SSH_HOST="$RUSER@$RHOST"
 # TODO: TAR only if changed
 
 rsync -a --chmod=u=rwx,g=,o= --compress --copy-links --progress -e ssh "$BACKUP_DIRECTORY" $SSH_HOST:$RPATH
+
+if (($?)); then
+	$XOSD_ECHO Error while rsyncing backups!
+	echo "Error while rsyncing backups!"
+	exit 1
+fi
+
 BACKUP_FILE="$RPATH/`date +%Y%m%d%H%M.tar.bz2`"
 TAR="tar --recursion -cf - \\\"$RPATH/backup\\\" -j > \\\"$BACKUP_FILE\\\""
 ENCRYPT="echo \\\"$SECRET\\\" | gpg --batch --passphrase-fd 0 -c \\\"$BACKUP_FILE\\\""
@@ -92,6 +101,16 @@ if [ "$COMMANDS" != "$EMPTY_COMMAND" ]; then
 	echo "Done."
 fi
 
+ls -R /home/prvak/downloads/movies/ > $TMPDIR/listing-movies
+ls -R /home/prvak/music/ > $TMPDIR/listing-music
+rsync -a --compress --progress -e ssh "$TMPDIR/listing-movies" "$TMPDIR/listing-music" $SSH_HOST:$RPATH
+
+# Backup /etc as well.
+# TODO: check...
+cd /etc
+rsync -a --compress --progress -e ssh /etc $SSH_HOST:$RETCPATH
+
+$XOSD_ECHO Backup complete.
 echo "Done on `date +%Y`, `date +%d.%m`, `date +%H:%M`." >> "$LOG"
 
 rm -rf "$TMPDIR"
