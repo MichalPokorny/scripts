@@ -7,7 +7,8 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-cryptsetup luksOpen /dev/sda7 crypto
-mount /dev/mapper/crypto /mnt/crypto
-mount -o bind /mnt/crypto/downloads /home/prvak/downloads
-mount -o bind /mnt/crypto/crypto /home/prvak/crypto
+cryptsetup luksOpen /dev/sda7 crypto &&
+mount /dev/mapper/crypto /mnt/crypto &&
+mount -o bind /mnt/crypto/downloads /home/prvak/downloads &&
+mount -o bind /mnt/crypto/crypto /home/prvak/crypto &&
+su prvak fetchmail

@@ -5,7 +5,9 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-umount /home/prvak/crypto
-umount /home/prvak/downloads
-umount /mnt/crypto
+killall fetchmail
+
+umount /home/prvak/crypto &&
+umount /home/prvak/downloads &&
+umount /mnt/crypto &&
 cryptsetup luksClose crypto
