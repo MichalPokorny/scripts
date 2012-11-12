@@ -1,0 +1,2 @@
+#!/bin/bash
+sshfs pokormi2@u-pl1.ms.mff.cuni.cz: ~prvak/lab
