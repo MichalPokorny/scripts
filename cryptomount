@@ -10,5 +10,6 @@ fi
 cryptsetup luksOpen /dev/sda7 crypto &&
 mount /dev/mapper/crypto /mnt/crypto &&
 mount -o bind /mnt/crypto/downloads /home/prvak/downloads &&
-mount -o bind /mnt/crypto/crypto /home/prvak/crypto &&
-su prvak fetchmail
+mount -o bind /mnt/crypto/crypto /home/prvak/crypto
+
+su prvak -c fetchmail
