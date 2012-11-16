@@ -5,6 +5,7 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
+systemctl stop postfix
 killall fetchmail
 
 umount /home/prvak/crypto &&

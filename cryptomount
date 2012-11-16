@@ -13,3 +13,4 @@ mount -o bind /mnt/crypto/downloads /home/prvak/downloads &&
 mount -o bind /mnt/crypto/crypto /home/prvak/crypto
 
 su prvak -c fetchmail
+systemctl start postfix
