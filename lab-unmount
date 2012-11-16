@@ -1,2 +1,2 @@
 #!/bin/bash
-umount ~prvak/lab
+fusermount -u ~prvak/lab
