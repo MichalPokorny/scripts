@@ -1,8 +1,10 @@
 #!/bin/bash
 
+WALLPAPER_DIR="/home/prvak/wallpapers/"
+
 if [ "$#" -eq 0 ]; then
-	WALLPAPER=`ls ~/wallpapers | sort --random-sort | head -1`
+	WALLPAPER=`ls $WALLPAPER_DIR | sort --random-sort | head -1`
 else
 	WALLPAPER="$1"
 fi
-feh --bg-fill ~/wallpapers/$WALLPAPER
+feh --bg-fill $WALLPAPER_DIR$WALLPAPER
