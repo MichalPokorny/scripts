@@ -1,0 +1,14 @@
+#!/usr/bin/ruby -w
+
+RANGE = (1..37)
+computer = 1
+
+if ARGV.size > 0
+	if ARGV[0] =~ /\d+/
+		computer = ARGV[0]
+	elsif ARGV[0] == '-r'
+		computer = RANGE.to_a.shuffle[0]
+	end
+end
+
+exec "ssh", "pokormi2@u-pl#{computer}.ms.mff.cuni.cz"
