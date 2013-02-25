@@ -11,5 +11,5 @@ fi
 
 for a in "$@"; do
 	BASENAME="`basename \"$a\"`"
-	ssh root@rny.cz "rm -iv /srv/http/rny.cz/$DIR/$BASENAME";
+	ssh rny.cz "rm -iv /srv/http/rny.cz/$DIR/$BASENAME";
 done

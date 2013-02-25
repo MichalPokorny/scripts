@@ -4,6 +4,7 @@ RANGE = (1..37)
 computer = 1
 
 if ARGV.size > 0
+	ARGV.shift
 	if ARGV[0] =~ /\d+/
 		computer = ARGV[0]
 	elsif ARGV[0] == '-r'
@@ -11,4 +12,4 @@ if ARGV.size > 0
 	end
 end
 
-exec "ssh", "pokormi2@u-pl#{computer}.ms.mff.cuni.cz"
+exec "ssh", "pokormi2@u-pl#{computer}.ms.mff.cuni.cz", ARGV
