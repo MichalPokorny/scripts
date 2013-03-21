@@ -12,4 +12,4 @@ if ARGV.size > 0
 	end
 end
 
-exec "ssh", "pokormi2@u-pl#{computer}.ms.mff.cuni.cz", ARGV
+exec "ssh", "pokormi2@u-pl#{computer}.ms.mff.cuni.cz", *ARGV

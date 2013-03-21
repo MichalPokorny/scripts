@@ -1,0 +1,7 @@
+#!/bin/bash
+
+xrandr --output VGA1 --auto
+change-wallpaper &
+killall xosdutil
+xosdutil &
+kolejnet
