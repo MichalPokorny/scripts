@@ -4,10 +4,10 @@ RANGE = (1..37)
 computer = 1
 
 if ARGV.size > 0
-	ARGV.shift
-	if ARGV[0] =~ /\d+/
-		computer = ARGV[0]
-	elsif ARGV[0] == '-r'
+	arg = ARGV.shift
+	if arg =~ /\d+/
+		computer = ARGV[1]
+	elsif arg == '-r'
 		computer = RANGE.to_a.shuffle[0]
 	end
 end
