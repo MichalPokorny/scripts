@@ -1,0 +1,24 @@
+#!/usr/bin/ruby -w
+
+def parse_time(s)
+	mins, secs = s.split(":")
+	# TODO: hours etc.
+	return mins.to_i * 60 + secs.to_i
+end
+
+line = `mpc status | head -n 2 | tail -n 1`.split[2]
+
+played = parse_time(line.split("/")[0])
+remaining = parse_time(line.split("/")[1]) - played
+
+for line in `mpc playlist -f %time%`.lines.drop(1) # drop first
+	t = parse_time(line)
+	remaining += t
+end
+
+puts "sleeping for #{remaining} s"
+sleep remaining
+
+if ARGV.length > 0
+	exec ARGV[0]
+end
