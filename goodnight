@@ -10,6 +10,10 @@ while true
 	sleep 5
 end
 
-if ARGV.length > 0
-	exec(*ARGV)
+run = ARGV
+
+if run.empty?
+	run = [ "systemctl", "suspend" ]
 end
+
+system(*run)
