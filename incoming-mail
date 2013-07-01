@@ -3,7 +3,7 @@
 require 'mail'
 require 'active_support/core_ext' # String#truncate
 
-mail = Mail.read_from_string STDIN.lines.to_a.join("")
+mail = Mail.read_from_string STDIN.each_line.to_a.join("")
 string = "#{mail.from.join ','}: #{mail.subject.truncate(25, omission: "\u2026", separator: " ")}"
 
 system "xosdutilctl", "echo", string
