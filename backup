@@ -104,7 +104,9 @@ fi
 # Backup movies and music (just as listings - I don't want massive uploads...)
 ls -R /home/prvak/downloads/movies/ > $TMPDIR/listing-movies
 ls -R /home/prvak/music/ > $TMPDIR/listing-music
-rsync -a --compress --progress -e ssh "$TMPDIR/listing-movies" "$TMPDIR/listing-music" $SSH_HOST:$RPATH
+pacman -Q > $TMPDIR/installed-packages
+rsync -a --compress --progress -e ssh "$TMPDIR/listing-movies" "$TMPDIR/listing-music" "$TMPDIR/installed-packages" $SSH_HOST:$RPATH
+
 
 # Backup /etc as well.
 # TODO: check...
