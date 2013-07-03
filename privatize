@@ -1,0 +1,3 @@
+#!/bin/bash
+
+rm -vf ~prvak/.mozilla/firefox/*/downloads.sqlite
