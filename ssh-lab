@@ -6,7 +6,7 @@ computer = 1
 if ARGV.size > 0
 	arg = ARGV.shift
 	if arg =~ /\d+/
-		computer = ARGV[1]
+		computer = arg
 	elsif arg == '-r'
 		computer = RANGE.to_a.shuffle[0]
 	end
