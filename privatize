@@ -1,3 +1,5 @@
 #!/bin/bash
 
-rm -vf ~prvak/.mozilla/firefox/*/downloads.sqlite
+if !pidof firefox; then
+	rm -vf ~/.mozilla/firefox/*/downloads.sqlite
+fi
