@@ -1,5 +1,5 @@
 #!/bin/bash
 
-if !pidof firefox; then
+if ! pidof firefox; then
 	rm -vf ~/.mozilla/firefox/*/downloads.sqlite
 fi
