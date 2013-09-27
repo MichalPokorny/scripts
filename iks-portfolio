@@ -23,18 +23,29 @@ invested = data["invested"] or raise "No initial investment specified"
 agent = Mechanize.new
 page = agent.get('http://www.iks-kb.cz/web/fondy_denni_hodnoty.html')
 
+raw = false
+until ARGV.empty?
+	case ARGV.shift
+	when "--raw" then raw = true
+	else puts "Usage: iks-portfolio [--raw]"; exit 1
+	end
+end
+
 value = 0
 date = nil
 
 page.search("div#fundView tr").each do |tr|
 	contents = tr.search("td").map(&:content).map(&:strip)
 	next unless contents.size >= 3
-	d = Date.parse(contents[1])
-	date = d if !date || date > d
 	if shares.key?(contents[0])
-		puts contents[1]
+		d = Date.parse(contents[1])
+		date = d if !date || date > d
 		value += contents[3].gsub(',','.').to_f * shares[contents[0]]
 	end
 end
 
-puts "%.2f Kč (%+.2f Kč / %+.2f%%%s)" % [value, value - invested, (value - invested) / invested * 100.0, date ? " @ #{date}" : ""]
+if raw
+	puts "%.2f" % value
+else
+	puts "%.2f Kč (%+.2f Kč / %+.2f%%%s)" % [value, value - invested, (value - invested) / invested * 100.0, date ? " @ #{date}" : ""]
+end
