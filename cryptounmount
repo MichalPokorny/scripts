@@ -10,5 +10,7 @@ killall fetchmail
 
 umount /home/prvak/crypto &&
 umount /home/prvak/downloads &&
+umount /home/prvak/fotky &&
+umount /home/prvak/.bitcoin &&
 umount /mnt/crypto &&
 cryptsetup luksClose crypto

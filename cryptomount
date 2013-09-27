@@ -7,10 +7,14 @@ if [[ $EUID -ne 0 ]]; then
 	exit $?
 fi
 
+# TODO: rvi kdyz v tech adresarich neco uz je
+
 cryptsetup luksOpen $DEVICE crypto &&
 mount /dev/mapper/crypto /mnt/crypto &&
 mount -o bind /mnt/crypto/downloads /home/prvak/downloads &&
-mount -o bind /mnt/crypto/crypto /home/prvak/crypto
+mount -o bind /mnt/crypto/crypto /home/prvak/crypto &&
+mount -o bind /mnt/crypto/fotky /home/prvak/fotky &&
+mount -o bind /mnt/crypto/.bitcoin /home/prvak/.bitcoin
 
 su prvak -c fetchmail
 systemctl start postfix
