@@ -1,8 +1,9 @@
 #!/usr/bin/ruby -w
 require 'nokogiri'
 require 'terminal-table'
+require 'pathname'
 
-doc = Nokogiri::XML open("ucetnictvi.xhb")
+doc = Nokogiri::XML open((Pathname.new('~') + "ucetnictvi.xhb").expand_path)
 
 class Account
 	def initialize(name, key, initial)
