@@ -1,0 +1,19 @@
+#!/usr/bin/ruby -w
+
+output = `postqueue -p`
+exit if output.strip =~ /Mail queue is empty/
+
+mail_lines = output.lines.select { |line|
+	line =~ /^[A-Z0-9]{10} /
+}
+
+def plural(word, n)
+	word + if n == 1
+		""
+	else
+		"s"
+	end
+end
+
+unsent = mail_lines.size
+system "xosdutilctl", "echo", "Warning: #{unsent} unsent #{plural('mail', unsent)}"
