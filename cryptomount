@@ -1,5 +1,8 @@
 #!/usr/bin/ruby -w
 
+require 'open3'
+require 'highline/import'
+
 DEVICE="/dev/sda6"
 
 def die(*args)
@@ -12,10 +15,35 @@ if Process.euid != 0
 	die "exec failed!"
 end
 
+def passphrase_ok?(passphrase)
+	Open3.popen3("cryptsetup --key-file - --test-passphrase luksOpen #{DEVICE} crypto") do |stdin, stdout, stderr, wait_thr|
+		stdin.write passphrase
+		stdin.close
+		return wait_thr.value.exitstatus == 0
+	end
+end
+
+def activate_crypto(passphrase)
+	Open3.popen3("cryptsetup --key-file - luksOpen #{DEVICE} crypto") do |stdin, stdout, stderr, wait_thr|
+		stdin.write passphrase
+		stdin.close
+		raise unless wait_thr.value.exitstatus == 0
+	end
+end
+
 if `cryptsetup status crypto` =~ / is inactive\./
 	puts "activating crypto mapping."
-	system "cryptsetup luksOpen #{DEVICE} crypto"
-	# TODO check
+
+	passphrase = nil
+	loop do
+		passphrase = ask("Password? ") { |q|
+			q.echo = "*" # false
+		}
+		break if passphrase_ok?(passphrase)
+		puts "Sorry, try again."
+	end
+
+	activate_crypto passphrase
 else
 	puts "crypto mapping already active."
 end

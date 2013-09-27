@@ -1,7 +1,10 @@
 #!/usr/bin/ruby -w
 
 def die(*args)
-	STDERR.puts(*args)
+	STDERR.puts(*args) unless args.empty?
+	if @restart_smtp
+		system "systemctl start postfix"
+	end
 	exit 1
 end
 
@@ -18,6 +21,18 @@ until ARGV.empty?
 		must_unmount = false
 	end
 end
+
+if !File.exist?("/dev/mapper/crypto")
+	STDERR.puts "Already unmounted."
+	exit 0
+end
+
+@restart_smtp = false
+
+system "systemctl stop postfix"
+@restart_smtp = true # Not likely interruptible...
+
+system "killall fetchmail"
 
 output = `lsof -F pc /dev/mapper/crypto`.strip
 unless output.empty?
@@ -38,12 +53,10 @@ unless output.empty?
 		die message
 	else
 		puts message
-		exit 1
+		die
 	end
 end
 
-system "systemctl stop postfix"
-system "killall fetchmail"
 
 # TODO: assert completion.
 system "umount -A /dev/mapper/crypto"
