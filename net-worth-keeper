@@ -1,0 +1,45 @@
+#!/usr/bin/ruby -w
+
+# TODO: plotting
+
+require 'terminal-table'
+require 'pathname'
+require 'csv'
+
+log_path = "~/misc/net-worth.csv"
+
+btc = `btc-wallet-price --raw`.to_f
+iks = `iks-portfolio --raw`.to_f
+bank = `homebank-balance --raw-total`.to_f
+
+total = btc + iks + bank
+
+mode = :report
+
+until ARGV.empty?
+	case ARGV.shift
+	when "--log" then mode = :log
+	when "--report" then mode = :report
+	else puts "Usage: net-worth-keeper [--report] [--log] [--graph]"; exit 1
+	end
+end
+
+case mode
+	when :report
+		table = Terminal::Table.new do |t|
+			{
+				"Účty a peníze" => bank,
+				"IKS fondy" => iks,
+				"Bitcoiny" => btc
+			}.each do |k, v|
+				t << [k, "%.2f" % v]
+			end
+			t << :separator
+			t << ["Suma", "%.2f" % total]
+		end
+		puts table
+	when :log
+		CSV.open(Pathname.new(log_path).expand_path, "a") do |log|
+			log << [Time.now.strftime("%Y-%m-%d %H:%M:%S"), total]
+		end
+end

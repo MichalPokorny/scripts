@@ -64,10 +64,13 @@ end
 
 case mode
 when :overview
-	@accounts.each do |key, account|
-		puts "#{(account.name+":").ljust 14} %.2f" % account.total
+	puts Terminal::Table.new do |t|
+		@accounts.each do |key, account|
+			t << [account.name, "%.2f" % account.total]
+		end
+		t << :separator
+		t << ["Suma", "%.2f" % calculate_total]
 	end
-	puts "#{'Suma:'.ljust 14} %.2f" % calculate_total
 when :raw_total
 	puts "%.2f" % calculate_total
 end
