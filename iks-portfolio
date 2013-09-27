@@ -1,0 +1,40 @@
+#!/usr/bin/ruby -w
+
+# This script calculates the CZK value and current ROI of an IKS portfolio.
+# Store your initial CZK investment and a list of your owned shares in
+# ~/.iks-portfolio.yml like this:
+#
+#		$ cat ~/.iks-portfolio.yml
+#		---
+#		invested: 1000005
+#		assets:
+#			IKS Dluhopisový PLUS: 19094
+#			KB Peněžní trh: 3005
+#			KB Vyvážený profil: 123
+
+require 'mechanize'
+require 'date'
+require 'pathname'
+
+data = YAML.load_file((Pathname.new('~') + '.iks-portfolio.yml').expand_path)
+shares = data["assets"] or raise "No assets owned."
+invested = data["invested"] or raise "No initial investment specified"
+
+agent = Mechanize.new
+page = agent.get('http://www.iks-kb.cz/web/fondy_denni_hodnoty.html')
+
+value = 0
+date = nil
+
+page.search("div#fundView tr").each do |tr|
+	contents = tr.search("td").map(&:content).map(&:strip)
+	next unless contents.size >= 3
+	d = Date.parse(contents[1])
+	date = d if !date || date > d
+	if shares.key?(contents[0])
+		puts contents[1]
+		value += contents[3].gsub(',','.').to_f * shares[contents[0]]
+	end
+end
+
+puts "%.2f Kč (%+.2f Kč / %+.2f%%%s)" % [value, value - invested, (value - invested) / invested * 100.0, date ? " @ #{date}" : ""]
