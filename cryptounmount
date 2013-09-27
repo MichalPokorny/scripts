@@ -1,16 +1,50 @@
-#!/bin/bash
+#!/usr/bin/ruby -w
 
-if [[ $EUID -ne 0 ]]; then
-	sudo $0;
-	exit
-fi
+def die(*args)
+	STDERR.puts(*args)
+	exit 1
+end
 
-systemctl stop postfix
-killall fetchmail
+if Process.euid != 0
+	exec "sudo", "cryptounmount", *ARGV
+	die "exec failed!"
+end
 
-umount /home/prvak/crypto &&
-umount /home/prvak/downloads &&
-umount /home/prvak/fotky &&
-umount /home/prvak/.bitcoin &&
-umount /mnt/crypto &&
-cryptsetup luksClose crypto
+must_unmount = true
+
+until ARGV.empty?
+	case ARGV.shift
+	when "--just-try"
+		must_unmount = false
+	end
+end
+
+output = `lsof -F pc /dev/mapper/crypto`.strip
+unless output.empty?
+	pids = []
+	require 'set'
+	commands = Set.new
+	output.lines.each do |line|
+		case line[0]
+		when 'p'
+			pids << line[1...line.length].strip.to_i
+		when 'c'
+			commands << line[1...line.length].strip
+		else raise
+		end
+	end
+	message = "There #{pids.size > 1 ? "are" : "is"} #{pids.size} user#{pids.size > 1 ? "s" : ""} of crypto (#{commands.to_a.join(', ')}). Cannot unmount."
+	if must_unmount
+		die message
+	else
+		puts message
+		exit 1
+	end
+end
+
+system "systemctl stop postfix"
+system "killall fetchmail"
+
+# TODO: assert completion.
+system "umount -A /dev/mapper/crypto"
+system "cryptsetup luksClose crypto"

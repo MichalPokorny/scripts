@@ -8,9 +8,10 @@ require 'csv'
 
 log_path = "~/misc/net-worth.csv"
 
-btc = `btc-wallet-price --raw`.to_f
-iks = `iks-portfolio --raw`.to_f
-bank = `homebank-balance --raw-total`.to_f
+# TODO: why is this needed? is PATH wrong?
+btc = `~/bin/btckit/btc-wallet-price --raw`.to_f
+iks = `~/bin/iks-portfolio --raw`.to_f
+bank = `~/bin/homebank-balance --raw-total`.to_f
 
 total = btc + iks + bank
 

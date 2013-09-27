@@ -1,20 +1,47 @@
-#!/bin/bash
+#!/usr/bin/ruby -w
 
 DEVICE="/dev/sda6"
 
-if [[ $EUID -ne 0 ]]; then
-	sudo $0;
-	exit $?
-fi
+def die(*args)
+	STDERR.puts(*args)
+	exit 1
+end
 
-# TODO: rvi kdyz v tech adresarich neco uz je
+if Process.euid != 0
+	exec "sudo", "cryptomount"
+	die "exec failed!"
+end
 
-cryptsetup luksOpen $DEVICE crypto &&
-mount /dev/mapper/crypto /mnt/crypto &&
-mount -o bind /mnt/crypto/downloads /home/prvak/downloads &&
-mount -o bind /mnt/crypto/crypto /home/prvak/crypto &&
-mount -o bind /mnt/crypto/fotky /home/prvak/fotky &&
-mount -o bind /mnt/crypto/.bitcoin /home/prvak/.bitcoin
+if `cryptsetup status crypto` =~ / is inactive\./
+	puts "activating crypto mapping."
+	system "cryptsetup luksOpen #{DEVICE} crypto"
+	# TODO check
+else
+	puts "crypto mapping already active."
+end
 
-su prvak -c fetchmail
-systemctl start postfix
+@mounted_dirs = `mount`.lines.select { |line| line =~ %r{/dev/mapper/crypto} }.map { |line|
+	raise unless line =~ /\A(.+) on (.+) type (.+) \(.+\)\Z/
+	$2
+}
+
+unless @mounted_dirs.include? "/mnt/crypto"
+	puts "mounting /mnt/crypto"
+	system "mount /dev/mapper/crypto /mnt/crypto"
+end
+
+%w{downloads crypto fotky .bitcoin}.each do |mount|
+	if @mounted_dirs.include? "/home/prvak/#{mount}"
+		puts "#{mount} already mounted"
+	else
+		target = "/home/prvak/#{mount}"
+		raise unless File.directory?(target)
+		raise "#{target} is dirty!" unless (Dir.entries(target) - %w{. ..}).empty?
+		puts "mounting #{mount}"
+		system "mount -o bind /mnt/crypto/#{mount} /home/prvak/#{mount}"
+	end
+end
+
+puts "starting mail services"
+system "su prvak -c fetchmail"
+system "systemctl start postfix"
