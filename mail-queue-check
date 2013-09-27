@@ -1,7 +1,16 @@
 #!/usr/bin/ruby -w
 
-output = `postqueue -p`
-exit if output.strip =~ /Mail queue is empty/
+# This watches against silent misconfigurations.
+
+output = `postqueue -p 2>&1`.strip
+exit if output =~ /Mail queue is empty/
+
+if output =~ /mail system is down/
+	# Hack: mail-queue-check should be run every 5 minutes. Mail system down
+	# should be displayed maybe like once every half-hour.
+	system "xosdutilctl", "echo", "Warning: mail system down" if rand(30 / 5) == 0
+	exit
+end
 
 mail_lines = output.lines.select { |line|
 	line =~ /^[A-Z0-9]{10} /
