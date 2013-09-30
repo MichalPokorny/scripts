@@ -31,7 +31,17 @@ def activate_crypto(passphrase)
 	end
 end
 
-if `cryptsetup status crypto` =~ / is inactive\./
+def crypto_active?
+	`cryptsetup status crypto` !~ / is inactive\./
+end
+
+if ARGV.shift == "--is-mounted"
+	exit crypto_active? ? 0 : 1
+end
+
+if crypto_active?
+	puts "crypto mapping already active."
+else
 	puts "activating crypto mapping."
 
 	passphrase = nil
@@ -44,8 +54,6 @@ if `cryptsetup status crypto` =~ / is inactive\./
 	end
 
 	activate_crypto passphrase
-else
-	puts "crypto mapping already active."
 end
 
 @mounted_dirs = `mount`.lines.select { |line| line =~ %r{/dev/mapper/crypto} }.map { |line|

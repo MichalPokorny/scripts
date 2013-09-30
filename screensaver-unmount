@@ -1,0 +1,18 @@
+#!/usr/bin/ruby -w
+
+output = `xscreensaver-command -time`
+# XScreenSaver 5.22: screen locked since Mon Sep 30 19:36:15 2013 (hacks: #19, #178)\n
+exit unless output =~ /locked since (.+) \(hack/ && system("cryptomount --is-mounted")
+
+require 'active_support/all'
+locked_since = Time.parse($1)
+seconds = Time.now - locked_since
+
+if seconds > 300 # 5 minutes -> try to unmount
+	puts "Trying to unmount..."
+	if system("cryptounmount --just-try")
+		puts "OK, unmounted."
+	else
+		puts "Failed to unmount."
+	end
+end
