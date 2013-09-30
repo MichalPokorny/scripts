@@ -11,7 +11,7 @@ def die(*args)
 end
 
 if Process.euid != 0
-	exec "sudo", "cryptomount"
+	exec "sudo", "cryptomount", *ARGV
 	die "exec failed!"
 end
 
@@ -42,8 +42,6 @@ end
 if crypto_active?
 	puts "crypto mapping already active."
 else
-	puts "activating crypto mapping."
-
 	passphrase = nil
 	loop do
 		passphrase = ask("Password? ") { |q|
