@@ -2,16 +2,27 @@
 
 # TODO: plotting
 
+require 'onlinestatus'
+exit unless OnlineStatus.online?
+
 require 'terminal-table'
 require 'pathname'
 require 'csv'
 
 log_path = "~/misc/net-worth.csv"
 
+def die(*args)
+	STDERR.puts(*args) unless args.empty?
+	exit 1
+end
+
 # TODO: why is this needed? is PATH wrong?
 btc = `~/bin/btckit/btc-wallet-price --raw`.to_f
+die if $?.exitstatus != 0
 iks = `~/bin/iks-portfolio --raw`.to_f
+die if $?.exitstatus != 0
 bank = `~/bin/homebank-balance --raw-total`.to_f
+die if $?.exitstatus != 0
 
 total = btc + iks + bank
 
@@ -21,7 +32,7 @@ until ARGV.empty?
 	case ARGV.shift
 	when "--log" then mode = :log
 	when "--report" then mode = :report
-	else puts "Usage: net-worth-keeper [--report] [--log] [--graph]"; exit 1
+	else die "Usage: net-worth-keeper [--report] [--log]"
 	end
 end
 
@@ -41,6 +52,6 @@ case mode
 		puts table
 	when :log
 		CSV.open(Pathname.new(log_path).expand_path, "a") do |log|
-			log << [Time.now.strftime("%Y-%m-%d %H:%M:%S"), total]
+			log << [Time.now.strftime("%Y-%m-%d %H:%M:%S"), Time.now.to_i, bank, iks, btc, total]
 		end
 end

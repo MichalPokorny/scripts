@@ -9,6 +9,8 @@ KEEP_REMOTE_COPY=1
 SECRET="`cat /home/prvak/backup_secret`"
 XOSD_ECHO="xosdutilctl echo"
 
+$XOSD_ECHO Backup started on `date '+%H:%M'`.
+
 # TODO: unsafe: processes are public...
 if [ "$1" == "--decrypt" ]; then
 	FILE="$2"
@@ -113,7 +115,7 @@ rsync -a --compress --progress -e ssh "$TMPDIR/listing-movies" "$TMPDIR/listing-
 cd /etc
 rsync -a --compress --progress -e ssh /etc $SSH_HOST:$RETCPATH 2>&1 > /dev/null
 
-$XOSD_ECHO Backup complete.
+$XOSD_ECHO Backup complete on `date +%H:%M`.
 echo "Done on `date +%Y`, `date +%d.%m`, `date +%H:%M`." >> "$LOG"
 
 rm -rf "$TMPDIR"
