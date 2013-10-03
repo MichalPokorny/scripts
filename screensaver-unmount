@@ -2,8 +2,10 @@
 
 # TODO: detect open display!
 
-output = `DISPLAY=:0 xscreensaver-command -time`
+output = `DISPLAY=:0 xscreensaver-command -time 2>&1`
 # XScreenSaver 5.22: screen locked since Mon Sep 30 19:36:15 2013 (hacks: #19, #178)\n
+#
+# Not interesting: 'no saver status on root window'
 exit unless output =~ /locked since (.+) \(hack/ && system("cryptomount --is-mounted")
 
 require 'active_support/all'

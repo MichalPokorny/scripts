@@ -5,3 +5,6 @@ echo
 df -H | egrep -v '(^(dev|tmpfs|run))|crypto'
 echo
 fortune -s
+
+echo
+echo
