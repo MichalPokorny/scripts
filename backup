@@ -6,7 +6,7 @@ BACKUP_DIRECTORY=/home/prvak/backup
 DO_ARCHIVE=0
 DO_ENCRYPTION=0
 KEEP_REMOTE_COPY=1
-SECRET="`cat /home/prvak/backup_secret`"
+SECRET="`cat /home/prvak/crypto/.backup_secret`"
 XOSD_ECHO="xosdutilctl echo"
 
 $XOSD_ECHO Backup started on `date '+%H:%M'`.
@@ -59,7 +59,7 @@ echo "Backup at `date +%Y`, `date +%d.%m`, `date +%H:%M`" >> "$LOG"
 #tar -C /home/prvak --recursion --dereference -cf - backup | bzip2 -9 > $APATH
 
 #echo "Encrypting..."
-#cat /home/prvak/backup_secret | gpg --batch --passphrase-fd 0 -c $APATH
+#cat /home/prvak/crypto/.backup_secret | gpg --batch --passphrase-fd 0 -c $APATH
 
 #echo "Sending..."
 #rsync -avzL --progress -e ssh $CPATH $RUSER@$RHOST:$RPATH
