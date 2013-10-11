@@ -4,5 +4,5 @@ xrandr --output VGA1 --off
 xrandr --output HDMI1 --off
 xrandr --output LVDS1 --auto
 killall xosdutil
-xosdutil &
+sudo -u prvak xosdutil &
 change-wallpaper

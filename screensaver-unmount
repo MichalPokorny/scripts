@@ -12,4 +12,4 @@ require 'active_support/all'
 locked_since = Time.parse($1)
 seconds = Time.now - locked_since
 
-system("cryptounmount --just-try") if seconds > 300 # 5 minutes -> try to unmount
+system("cryptounmount --just-try") if seconds > 600 # 10 minutes -> try to unmount

@@ -6,7 +6,7 @@ xrandr --output VGA1 --auto
 xrandr --output VGA1 --right-of HDMI1
 change-wallpaper &
 killall xosdutil
-xosdutil &
+sudo -u prvak xosdutil &
 
 # Keyboard stuff
 setxkbmap -option grp:switch,grp:alt_shift_toggle,compose:caps us,cz -variant ,qwerty
