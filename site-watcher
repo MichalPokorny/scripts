@@ -8,12 +8,19 @@ require 'pathname'
 require 'yaml'
 require 'net/http'
 require 'nokogiri'
+require 'parallel'
+
+class CannotDetermineContent < StandardError; end
 
 class UrlSource
 	def initialize(url); @url = url; end
 	attr_reader :url
 	def content
-		Net::HTTP.get(URI.parse(@url))
+		begin
+			Net::HTTP.get(URI.parse(@url))
+		rescue Net::ReadTimeout
+			raise CannotDetermineContent, "Timeout reading #@url"
+		end
 	end
 end
 
@@ -30,6 +37,7 @@ end
 confpath = (Pathname.new("~") + ".watched-sites.yml").expand_path
 unless File.exist?(confpath)
 	STDERR.puts "~/.watched-sites.yml not found."
+	exit 1
 end
 
 def create_source(key, spec)
@@ -48,8 +56,16 @@ sites = Hash[YAML.load_file(confpath).map { |k, v| [k, create_source(k, v)] }]
 path = (Pathname.new("~") + ".watched-sites-hashes").expand_path
 downloaded = File.exist?(path) ? YAML.load_file(path) : {}
 downloaded.delete_if { |k, v| !sites.key? k }
-sites.each do |site, source|
-	result = source.content
+Parallel.each(sites.to_a) do |pair|
+	site, source = *pair
+
+	begin
+		result = source.content
+	rescue CannotDetermineContent
+		puts "warning: cannot determine content: #{site} (#{source.url})"
+		next
+	end
+
 	hash = Digest::MD5.hexdigest(result)
 	if !downloaded.key?(site) || downloaded[site] != hash
 		puts "changed site: #{site} (#{source.url}) (hash: #{hash})"
@@ -57,6 +73,7 @@ sites.each do |site, source|
 	end
 end
 
+old_downloaded = YAML.load_file(path)
 open(path, "w") do |f|
-	YAML.dump(downloaded, f)
+	YAML.dump(old_downloaded.merge(downloaded), f)
 end
