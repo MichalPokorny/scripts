@@ -57,7 +57,8 @@ unless output.empty?
 	end
 end
 
-
 # TODO: assert completion.
 system "umount -A /dev/mapper/crypto"
 system "cryptsetup luksClose crypto"
+
+puts "Crypto unmounted at #{Time.now.to_s}"

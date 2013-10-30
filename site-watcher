@@ -1,8 +1,11 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/ruby
+# TODO: -w
 
 require 'onlinestatus'
 exit if OnlineStatus.offline?
 
+# needs gem 'diff-lcs'
+require 'diff/lcs'
 require 'digest/md5'
 require 'pathname'
 require 'yaml'
@@ -30,7 +33,7 @@ class NokogiriSource
 	def content
 		doc = Nokogiri::HTML(Net::HTTP.get(URI.parse @url))
 		element = doc.search(@selector).first
-		element || ""
+		element ? element.content : ""
 	end
 end
 
@@ -53,10 +56,10 @@ end
 
 sites = Hash[YAML.load_file(confpath).map { |k, v| [k, create_source(k, v)] }]
 
-path = (Pathname.new("~") + ".watched-sites-hashes").expand_path
+path = (Pathname.new("~") + ".watched-sites-contents").expand_path
 downloaded = File.exist?(path) ? YAML.load_file(path) : {}
 downloaded.delete_if { |k, v| !sites.key? k }
-Parallel.each(sites.to_a) do |pair|
+results = Parallel.map(sites.to_a) do |pair|
 	site, source = *pair
 
 	begin
@@ -67,13 +70,43 @@ Parallel.each(sites.to_a) do |pair|
 	end
 
 	hash = Digest::MD5.hexdigest(result)
-	if !downloaded.key?(site) || downloaded[site] != hash
+
+	if !downloaded.key?(site) || downloaded[site][:hash] != hash
 		puts "changed site: #{site} (#{source.url}) (hash: #{hash})"
-		downloaded[site] = hash
+
+		lines1 = downloaded[site] ? downloaded[site][:content].lines : []
+		lines2 = result.lines
+		diff = Diff::LCS.diff(lines1, lines2)
+
+		all_changes = []
+		diff.each do |hunk|
+			if hunk.first.is_a? Diff::LCS::Change
+				all_changes += hunk
+			else
+				all_changes << hunk
+			end
+		end
+
+		all_changes.each do |change|
+			puts "#{change.action} #{change.position.to_s.rjust 5} #{change.element}"
+		end
 	end
+
+	{
+		site: site,
+		content: result,
+		hash: hash
+	}
 end
 
-old_downloaded = YAML.load_file(path)
+results.each do |result|
+	downloaded[result[:site]] = result
+end
+
+require 'pp'
+#pp downloaded
+#old_downloaded = File.exist?(path) ? YAML.load_file(path) : {}
 open(path, "w") do |f|
-	YAML.dump(old_downloaded.merge(downloaded), f)
+#	YAML.dump(old_downloaded.merge(downloaded), f)
+	YAML.dump(downloaded, f)
 end
