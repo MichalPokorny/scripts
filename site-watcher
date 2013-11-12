@@ -21,6 +21,8 @@ class UrlSource
 	def content
 		begin
 			Net::HTTP.get(URI.parse(@url))
+		rescue EOFError
+			raise CannotDetermineContent, "EOF error reading #@url"
 		rescue Net::ReadTimeout
 			raise CannotDetermineContent, "Timeout reading #@url"
 		end
@@ -64,43 +66,45 @@ results = Parallel.map(sites.to_a) do |pair|
 
 	begin
 		result = source.content
-	rescue CannotDetermineContent
-		puts "warning: cannot determine content: #{site} (#{source.url})"
-		next
-	end
 
-	hash = Digest::MD5.hexdigest(result)
+		hash = Digest::MD5.hexdigest(result)
 
-	if !downloaded.key?(site) || downloaded[site][:hash] != hash
-		puts "changed site: #{site} (#{source.url}) (hash: #{hash})"
+		if !downloaded.key?(site) || downloaded[site][:hash] != hash
+			puts "changed site: #{site} (#{source.url}) (hash: #{hash})"
 
-		lines1 = downloaded[site] ? downloaded[site][:content].lines : []
-		lines2 = result.lines
-		diff = Diff::LCS.diff(lines1, lines2)
+			lines1 = downloaded[site] ? downloaded[site][:content].lines : []
+			lines2 = result.lines
+			diff = Diff::LCS.diff(lines1, lines2)
 
-		all_changes = []
-		diff.each do |hunk|
-			if hunk.first.is_a? Diff::LCS::Change
-				all_changes += hunk
-			else
-				all_changes << hunk
+			all_changes = []
+			diff.each do |hunk|
+				if hunk.first.is_a? Diff::LCS::Change
+					all_changes += hunk
+				else
+					all_changes << hunk
+				end
+			end
+
+			all_changes.each do |change|
+				puts "#{change.action} #{change.position.to_s.rjust 5} #{change.element}"
 			end
 		end
 
-		all_changes.each do |change|
-			puts "#{change.action} #{change.position.to_s.rjust 5} #{change.element}"
-		end
+		{
+			site: site,
+			content: result,
+			hash: hash
+		}
+	rescue CannotDetermineContent => e
+		puts "warning: cannot determine content: #{site} (#{e.message})"
+		next
 	end
-
-	{
-		site: site,
-		content: result,
-		hash: hash
-	}
 end
 
 results.each do |result|
-	downloaded[result[:site]] = result
+	if result
+		downloaded[result[:site]] = result
+	end
 end
 
 require 'pp'
