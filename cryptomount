@@ -3,7 +3,7 @@
 require 'open3'
 require 'highline/import'
 
-DEVICE="/dev/sda6"
+DEVICE="/dev/sdb2"
 
 def die(*args)
 	STDERR.puts(*args)
@@ -69,7 +69,7 @@ end
 		puts "#{mount} already mounted"
 	else
 		target = "/home/prvak/#{mount}"
-		raise unless File.directory?(target)
+		raise "#{target} is dirty: not a directory" unless File.directory?(target)
 		raise "#{target} is dirty!" unless (Dir.entries(target) - %w{. ..}).empty?
 		puts "mounting #{mount}"
 		system "mount -o bind /mnt/crypto/#{mount} /home/prvak/#{mount}"

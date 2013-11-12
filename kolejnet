@@ -1,14 +1,16 @@
 #!/bin/bash
 
+INTERFACE=enp0s25 # eth0
+
 if [[ $EUID -ne 0 ]]; then
 	sudo $0;
 	exit
 fi
 
-macchanger eth0 -m 2C:41:38:05:51:08
+macchanger $INTERFACE -m 2C:41:38:05:51:08
 systemctl stop wicd
 killall dhcpcd
 killall wpa_supplicant
 ip link set eth0 up
-wpa_supplicant -Dwired -ieth0 -c/etc/wpa_supplicant/kolejnet.conf -B
-dhcpcd eth0 -t 120
+wpa_supplicant -Dwired -$INTERFACE -c/etc/wpa_supplicant/kolejnet.conf -B
+dhcpcd $INTERFACE -t 120
