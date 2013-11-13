@@ -1,5 +1,8 @@
 #!/usr/bin/ruby -w
 
+MAPPING = "crypto"
+MAPPER_DEVICE = "/dev/mapper/#{MAPPING}"
+
 def die(*args)
 	STDERR.puts(*args) unless args.empty?
 	if @restart_smtp
@@ -22,7 +25,7 @@ until ARGV.empty?
 	end
 end
 
-if !File.exist?("/dev/mapper/crypto")
+if !File.exist?(MAPPER_DEVICE)
 	STDERR.puts "Already unmounted."
 	exit 0
 end
@@ -34,7 +37,7 @@ system "systemctl stop postfix"
 
 system "killall fetchmail"
 
-output = `lsof -F pc /dev/mapper/crypto`.strip
+output = `lsof -F pc #{MAPPER_DEVICE}`.strip
 unless output.empty?
 	pids = []
 	require 'set'
@@ -58,7 +61,7 @@ unless output.empty?
 end
 
 # TODO: assert completion.
-system "umount -A /dev/mapper/crypto"
-system "cryptsetup luksClose crypto"
+system "umount -A #{MAPPER_DEVICE}"
+system "cryptsetup luksClose #{MAPPING}"
 
 puts "Crypto unmounted at #{Time.now.to_s}"

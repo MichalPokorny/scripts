@@ -2,7 +2,7 @@
 
 require 'open3'
 
-DEVICE="/dev/sdb2"
+DEVICE="/dev/disk/by-uuid/7bdee7dd-4c49-4d99-87f8-5b40dccfd1e3"
 
 def die(*args)
 	STDERR.puts(*args)
@@ -15,10 +15,22 @@ if Process.euid != 0
 end
 
 def passphrase_ok?(passphrase)
-	Open3.popen3("cryptsetup --key-file - --test-passphrase luksOpen #{DEVICE} crypto") do |stdin, stdout, stderr, wait_thr|
+	command = "cryptsetup --key-file - --test-passphrase luksOpen #{DEVICE} crypto"
+	Open3.popen3(command) do |stdin, stdout, stderr, wait_thr|
 		stdin.write passphrase
 		stdin.close
-		return wait_thr.value.exitstatus == 0
+
+		case wait_thr.value.exitstatus
+		when 0
+			return true
+		when 2
+			return false
+		else
+			STDERR.puts "Unexpected cryptsetup return code: #{wait_thr.value.exitstatus}"
+			puts stdout.read
+			puts stderr.read
+			raise
+		end
 	end
 end
 
