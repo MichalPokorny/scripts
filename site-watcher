@@ -23,6 +23,8 @@ class UrlSource
 			Net::HTTP.get(URI.parse(@url))
 		rescue Errno::ECONNREFUSED
 			raise CannotDetermineContent, "Connection refused reading #@url"
+		rescue Errno::ECONNRESET
+			raise CannotDetermineContent, "Connection reset while reading #@url"
 		rescue EOFError
 			raise CannotDetermineContent, "EOF error reading #@url"
 		rescue Net::ReadTimeout
