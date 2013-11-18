@@ -21,6 +21,8 @@ class UrlSource
 	def content
 		begin
 			Net::HTTP.get(URI.parse(@url))
+		rescue Errno::ECONNREFUSED
+			raise CannotDetermineContent, "Connection refused reading #@url"
 		rescue EOFError
 			raise CannotDetermineContent, "EOF error reading #@url"
 		rescue Net::ReadTimeout
