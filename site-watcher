@@ -27,7 +27,7 @@ class UrlSource
 			raise CannotDetermineContent, "Connection reset while reading #@url"
 		rescue EOFError
 			raise CannotDetermineContent, "EOF error reading #@url"
-		rescue Net::ReadTimeout
+		rescue Net::ReadTimeout, Errno::ETIMEDOUT
 			raise CannotDetermineContent, "Timeout reading #@url"
 		end
 	end
