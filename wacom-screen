@@ -1,0 +1,7 @@
+#!/bin/bash
+
+PEN=`xinput --list | grep "Wacom Bamboo Connect Pen stylus" | cut -d= -f2 | cut -d[ -f1 | tr -cd 0-9`
+ERASER=`xinput --list | grep "Wacom Bamboo Connect Pen eraser" | cut -d= -f2 | cut -d[ -f1 | tr -cd 0-9`
+
+xsetwacom --set $PEN MapToOutput VGA1
+xsetwacom --set $ERASER MapToOutput VGA1
