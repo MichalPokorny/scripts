@@ -1,0 +1,29 @@
+#!/usr/bin/ruby
+
+require 'pathname'
+require 'onlinestatus'
+require 'json'
+require 'net/http'
+require 'pp'
+
+unless OnlineStatus.online?
+	if verbose
+		STDERR.puts "We are offline."
+	end
+
+	exit 0
+end
+
+token_path = Pathname.new("~/.mining-bitcoin-cz-token").expand_path
+token = File.read(token_path).strip
+url = "https://mining.bitcoin.cz/accounts/profile/json/#{token}"
+response = Net::HTTP::get_response(URI.parse(url)).body
+json = JSON.parse(response)
+
+btc = json["confirmed_reward"].to_f + json["unconfirmed_reward"].to_f
+btc_price = `bitcoin-price`
+if $?.exitstatus != 0
+	puts "Cannot get bitcoin price."
+	exit 1
+end
+puts "%.2f Kč" % [btc * btc_price.to_f]

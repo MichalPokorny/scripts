@@ -15,4 +15,5 @@ sudo -u prvak xosdutil &
 setxkbmap -option grp:switch,grp:alt_shift_toggle,compose:caps us,cz -variant ,qwerty
 xmodmap ~/.Xmodmap
 
-kolejnet
+wicd-cli --wired -c
+# kolejnet -- not needed anymore
