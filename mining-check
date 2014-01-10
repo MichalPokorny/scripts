@@ -1,0 +1,40 @@
+#!/usr/bin/ruby
+
+require 'pathname'
+require 'onlinestatus'
+require 'json'
+require 'net/http'
+
+verbose = (ARGV[0] != "--quiet")
+
+unless OnlineStatus.online?
+	if verbose
+		STDERR.puts "We are offline, cannot check workers."
+	end
+
+	exit 0
+end
+
+token_path = Pathname.new("~/.mining-bitcoin-cz-token").expand_path
+token = File.read(token_path).strip
+url = "https://mining.bitcoin.cz/accounts/profile/json/#{token}"
+response = Net::HTTP::get_response(URI.parse(url)).body
+json = JSON.parse(response)
+
+ok = true
+json["workers"].each do |key, w|
+	diff = Time.now - Time.at(w["last_share"])
+	alive = w["alive"] && (diff.abs < 5*60) # 5 minutes
+
+	unless alive
+		STDERR.puts "Worker #{key} is dead!"
+		ok = false
+	end
+end
+
+if verbose
+	if ok
+		puts "All workers (#{json["workers"].keys.join(', ')}) are alive and well."
+	end
+end
+exit (ok ? 0 : 1)
