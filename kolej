@@ -3,13 +3,18 @@
 LEFT=DP2
 RIGHT=VGA1
 
-xrandr --output LVDS1 --off
-xrandr --output $LEFT --auto
-xrandr --output $RIGHT --auto
-xrandr --output $RIGHT --right-of $LEFT
-change-wallpaper &
-killall xosdutil
-sudo -u prvak xosdutil &
+if (xrandr | grep "$LEFT connected" > /dev/null) && (xrandr | grep "$RIGHT connected" > /dev/null); then
+	xrandr --output LVDS1 --off
+	xrandr --output $LEFT --auto
+	xrandr --output $RIGHT --auto
+	xrandr --output $RIGHT --right-of $LEFT
+	change-wallpaper &
+	killall xosdutil
+	sudo -u prvak xosdutil &
+else
+	logger "Nejsou pripojene vystupy $LEFT i $RIGHT, kaslu na to..."
+	echo "Nejsou pripojene vystupy $LEFT i $RIGHT, kaslu na to..." >&2
+fi
 
 # Keyboard stuff
 setxkbmap -option grp:switch,grp:alt_shift_toggle,compose:caps us,cz -variant ,qwerty

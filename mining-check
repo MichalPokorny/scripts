@@ -5,7 +5,22 @@ require 'onlinestatus'
 require 'json'
 require 'net/http'
 
-verbose = (ARGV[0] != "--quiet")
+verbose = true
+xosd = false
+report_dead_stderr = true
+
+until ARGV.empty?
+	case ARGV.shift
+		when "--quiet"
+			verbose = false
+		when "--no-report-dead-stderr"
+			report_dead_stderr = false
+		when "--xosd"
+			xosd = true
+		else
+			raise "Invalid argument"
+	end
+end
 
 unless OnlineStatus.online?
 	if verbose
@@ -27,14 +42,24 @@ json["workers"].each do |key, w|
 	alive = w["alive"] && (diff.abs < 5*60) # 5 minutes
 
 	unless alive
-		STDERR.puts "Worker #{key} is dead!"
+		msg = "Worker #{key} is dead!" 
+		STDERR.puts msg if report_dead_stderr
+		if xosd
+			system("xosdutilctl", "echo", msg)
+		end
 		ok = false
 	end
 end
 
 if verbose
 	if ok
-		puts "All workers (#{json["workers"].keys.join(', ')}) are alive and well."
+		msg = "All workers (#{json["workers"].keys.join(', ')}) are alive and well."
+		puts msg
+
+		if xosd
+			system("xosdutilctl", "echo", msg)
+		end
 	end
 end
+
 exit (ok ? 0 : 1)

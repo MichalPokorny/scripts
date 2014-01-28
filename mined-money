@@ -26,4 +26,4 @@ if $?.exitstatus != 0
 	puts "Cannot get bitcoin price."
 	exit 1
 end
-puts "%.2f Kč" % [btc * btc_price.to_f]
+puts "%.4f BTC (%.2f Kč)" % [btc, btc * btc_price.to_f]
