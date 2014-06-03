@@ -7,11 +7,8 @@ require 'net/http'
 require 'pp'
 
 unless OnlineStatus.online?
-	if verbose
-		STDERR.puts "We are offline."
-	end
-
-	exit 0
+	STDERR.puts "We are offline."
+	exit 1
 end
 
 token_path = Pathname.new("~/.mining-bitcoin-cz-token").expand_path

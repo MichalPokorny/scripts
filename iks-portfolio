@@ -41,7 +41,14 @@ page.search("div#fundView tr").each do |tr|
 	if shares.key?(contents[0])
 		d = Date.parse(contents[1])
 		date = d if !date || date > d
-		value += contents[3].gsub(',','.').to_f * shares[contents[0]]
+
+		stripped = contents[3].gsub(',','.').gsub(/[ ]/,'')
+		price = stripped.to_f
+		sh = shares[contents[0]]
+
+		v = price * sh
+
+		value += v
 	end
 end
 
