@@ -38,6 +38,7 @@ date = nil
 page.search("div#fundView tr").each do |tr|
 	contents = tr.search("td").map(&:content).map(&:strip)
 	next unless contents.size >= 3
+
 	if shares.key?(contents[0])
 		d = Date.parse(contents[1])
 		date = d if !date || date > d
@@ -49,6 +50,8 @@ page.search("div#fundView tr").each do |tr|
 		v = price * sh
 
 		value += v
+
+		shares.delete(contents[0])
 	end
 end
 
