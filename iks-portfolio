@@ -35,24 +35,30 @@ end
 value = 0
 date = nil
 
-page.search("div#fundView tr").each do |tr|
-	contents = tr.search("td").map(&:content).map(&:strip)
-	next unless contents.size >= 3
+values =
+	page.search("div#fundView tr").map do |tr|
+		contents = tr.search("td").map(&:content).map(&:strip)
+		next unless contents.size >= 3
 
-	if shares.key?(contents[0])
 		d = Date.parse(contents[1])
 		date = d if !date || date > d
 
 		stripped = contents[3].gsub(',','.').gsub(/[ ]/,'')
 		price = stripped.to_f
-		sh = shares[contents[0]]
 
-		v = price * sh
+		[contents[0], price]
+	end.compact.to_h
 
-		value += v
+value =
+	shares.map do |name, count|
+		values.key?(name) && values[name] * count
+	end.select { |x| x }.inject(&:+)
 
-		shares.delete(contents[0])
-	end
+if (shares.keys - values.keys).any?
+	puts "ERROR: the following shares weren't found: #{shares.keys - values.keys}"
+	puts "Known shares:"
+	pp values
+	exit 1
 end
 
 if raw
