@@ -9,26 +9,11 @@ exit unless OnlineStatus.online?
 require 'terminal-table'
 require 'pathname'
 require 'csv'
+require 'parallel'
 
-log_path = "~/misc/net-worth.csv"
-
-def die(*args)
-	STDERR.puts(*args) unless args.empty?
-	exit 1
-end
-
-# TODO: why is this needed? is PATH wrong?
-btc = `~/bin/btckit/btc-wallet-price --raw`.to_f
-die if $?.exitstatus != 0
-iks = `~/bin/iks-portfolio --raw`.to_f
-die if $?.exitstatus != 0
-bank = `~/bin/homebank-balance --raw-total`.to_f
-die if $?.exitstatus != 0
-
-total = btc + iks + bank
+LOG_PATH = "~/misc/net-worth.csv"
 
 mode = :report
-
 until ARGV.empty?
 	case ARGV.shift
 	when "--log" then mode = :log
@@ -37,22 +22,56 @@ until ARGV.empty?
 	end
 end
 
+def die(*args)
+	STDERR.puts(*args) unless args.empty?
+	exit 1
+end
+
+assets = [
+	{ name: 'Účty a peníze', command: 'homebank-balance --raw-total' },
+	{ name: 'Bitcoiny', command: 'btc-wallet-price --raw' },
+	{ name: 'IKS fondy', command: 'iks-portfolio --raw' },
+	{ name: 'Akcie', command: 'stock-portfolio --raw' }
+]
+
+results =
+	Parallel.map(assets) do |asset|
+		result = `#{asset[:command]}`.to_f
+		if $?.exitstatus != 0
+			if mode == :report
+				puts "Failed to read asset #{asset[:name]}"
+			end
+
+			die
+		end
+
+		[asset[:name], result]
+	end
+
+unless results.all?
+	if mode == :report
+		puts "Something failed :("
+	end
+	die
+end
+
+total = results.values.inject(&:+)
+
 case mode
 	when :report
 		table = Terminal::Table.new do |t|
-			{
-				"Účty a peníze" => bank,
-				"IKS fondy" => iks,
-				"Bitcoiny" => btc
-			}.each do |k, v|
-				t << [k, "%.2f" % v]
+			results.each do |asset_name, value|
+				t << [asset_name, "%.2f" % value]
 			end
 			t << :separator
 			t << ["Suma", "%.2f" % total]
 		end
 		puts table
 	when :log
-		CSV.open(Pathname.new(log_path).expand_path, "a") do |log|
-			log << [Time.now.strftime("%Y-%m-%d %H:%M:%S"), Time.now.to_i, bank, iks, btc, total]
+		CSV.open(Pathname.new(LOG_PATH).expand_path, "a") do |log|
+			log << [
+				Time.now.strftime("%Y-%m-%d %H:%M:%S"), Time.now.to_i,
+				total, bank, iks, btc, stock
+			]
 		end
 end

@@ -1,0 +1,52 @@
+#!/usr/bin/ruby
+
+require 'pathname'
+require 'yaml'
+require 'net/http'
+require 'uri'
+require 'ap'
+require 'csv'
+require 'bigdecimal'
+
+config = YAML.load_file(Pathname.new("~/stock-portfolio.yml").expand_path)
+
+symbols = config['stocks'].keys
+format = "nsl1"
+url = "http://download.finance.yahoo.com/d/quotes.csv?s=#{symbols.join(',')}&f=#{format}&e=.csv"
+
+response = Net::HTTP.get_response(URI.parse(url))
+
+prices = symbols.map(&:to_sym).map { |x| [x,nil] }.to_h
+
+CSV.parse(response.body).each do |line|
+	name, ticker, latest_value = line
+	latest_value = BigDecimal.new(latest_value)
+
+	prices[ticker.to_sym] = {
+		name: name,
+		latest_value: latest_value,
+		amount: config['stocks'][ticker]
+	}
+end
+
+raise "Something is missing..." unless prices.values.all?
+
+total_stocks = prices.map { |_, hash| hash[:latest_value] * hash[:amount] }.inject(&:+)
+usd = BigDecimal.new(config['USD'], 3) # precision 3
+
+total_usd = usd + total_stocks
+
+# TODO: tfuj
+require_relative 'btckit/bank.rb'
+require_relative 'btckit/config.rb'
+
+config = BtcKit::Config.new
+bank = BtcKit::Bank.new(config.bank_filename)
+
+total_czk = bank.exchange(total_usd, 'USD', 'CZK').cents
+
+if ARGV.include?('--raw')
+	puts total_czk
+else
+	puts '$%.2f (%d Kč)' % [total_usd, total_czk]
+end
