@@ -27,15 +27,16 @@ def die(*args)
 	exit 1
 end
 
+# Look out: the order matters
 assets = [
 	{ name: 'Účty a peníze', command: 'homebank-balance --raw-total' },
-	{ name: 'Bitcoiny', command: 'btc-wallet-price --raw' },
 	{ name: 'IKS fondy', command: 'iks-portfolio --raw' },
+	{ name: 'Bitcoiny', command: 'btc-wallet-price --raw' },
 	{ name: 'Akcie', command: 'stock-portfolio --raw' }
 ]
 
 results =
-	Parallel.map(assets) do |asset|
+	Parallel.map(assets) { |asset|
 		result = `#{asset[:command]}`.to_f
 		if $?.exitstatus != 0
 			if mode == :report
@@ -46,7 +47,7 @@ results =
 		end
 
 		[asset[:name], result]
-	end
+	}.to_h
 
 unless results.all?
 	if mode == :report
@@ -71,7 +72,7 @@ case mode
 		CSV.open(Pathname.new(LOG_PATH).expand_path, "a") do |log|
 			log << [
 				Time.now.strftime("%Y-%m-%d %H:%M:%S"), Time.now.to_i,
-				total, bank, iks, btc, stock
-			]
+				total
+			] + results.values
 		end
 end

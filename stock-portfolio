@@ -8,7 +8,7 @@ require 'ap'
 require 'csv'
 require 'bigdecimal'
 
-config = YAML.load_file(Pathname.new("~/stock-portfolio.yml").expand_path)
+config = YAML.load_file(Pathname.new("~/.stock-portfolio.yml").expand_path)
 
 symbols = config['stocks'].keys
 format = "nsl1"
