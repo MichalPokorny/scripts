@@ -60,7 +60,7 @@ def create_source(key, spec)
 	end
 end
 
-sites = Hash[YAML.load_file(confpath).map { |k, v| [k, create_source(k, v)] }]
+sites = (YAML.load_file(confpath).map { |k, v| [k, create_source(k, v)] } || []).to_h
 
 path = (Pathname.new("~") + ".watched-sites-contents").expand_path
 downloaded = File.exist?(path) ? YAML.load_file(path) : {}

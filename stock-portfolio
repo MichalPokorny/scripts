@@ -8,24 +8,28 @@ require 'ap'
 require 'csv'
 require 'bigdecimal'
 
+require 'yahoo_stock' # gem 'nas-yahoo_stock'
+
 config = YAML.load_file(Pathname.new("~/.stock-portfolio.yml").expand_path)
 
 symbols = config['stocks'].keys
 format = "nsl1"
-url = "http://download.finance.yahoo.com/d/quotes.csv?s=#{symbols.join(',')}&f=#{format}&e=.csv"
-
-response = Net::HTTP.get_response(URI.parse(url))
 
 prices = symbols.map(&:to_sym).map { |x| [x,nil] }.to_h
+YahooStock::Quote.new(stock_symbols: symbols, read_parameters: [:symbol, :name, :bid, :bid_real_time]).results(:to_hash).output.each do |stock|
+	bid =
+		if stock[:bid_real_time] != 'N/A'
+			stock[:bid_real_time]
+		elsif stock[:bid] != 'N/A'
+			stock[:bid]
+		else
+			raise 'Cannot get bid'
+		end
 
-CSV.parse(response.body).each do |line|
-	name, ticker, latest_value = line
-	latest_value = BigDecimal.new(latest_value)
-
-	prices[ticker.to_sym] = {
-		name: name,
-		latest_value: latest_value,
-		amount: config['stocks'][ticker]
+	prices[stock[:symbol].to_sym] = {
+		name: stock[:name],
+		latest_value: BigDecimal.new(bid),
+		amount: config['stocks'][stock[:symbol]]
 	}
 end
 
@@ -40,13 +44,14 @@ total_usd = usd + total_stocks
 require_relative 'btckit/bank.rb'
 require_relative 'btckit/config.rb'
 
-config = BtcKit::Config.new
-bank = BtcKit::Bank.new(config.bank_filename)
+btckit_config = BtcKit::Config.new
+bank = BtcKit::Bank.new(btckit_config.bank_filename)
 
-total_czk = bank.exchange(total_usd, 'USD', 'CZK').cents
+initial_czk = config['CZK']
+total_czk = bank.exchange(total_usd, 'USD', 'CZK').cents + initial_czk
 
 if ARGV.include?('--raw')
 	puts total_czk
 else
-	puts '$%.2f (%d Kč)' % [total_usd, total_czk]
+	puts '$%.2f + %d Kč (%d Kč)' % [total_usd, initial_czk, total_czk]
 end
