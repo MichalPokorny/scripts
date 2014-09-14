@@ -35,7 +35,9 @@ end
 
 raise "Something is missing..." unless prices.values.all?
 
-total_stocks = prices.map { |_, hash| hash[:latest_value] * hash[:amount] }.inject(&:+)
+total_stocks = prices.map {
+	|_, hash| hash[:latest_value] * hash[:amount]
+}.inject(&:+)
 usd = BigDecimal.new(config['USD'], 3) # precision 3
 
 total_usd = usd + total_stocks
