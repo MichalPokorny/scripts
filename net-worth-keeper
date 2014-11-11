@@ -18,7 +18,8 @@ until ARGV.empty?
 	case ARGV.shift
 	when "--log" then mode = :log
 	when "--report" then mode = :report
-	else die "Usage: net-worth-keeper [--report] [--log]"
+	when "--raw_total" then mode = :raw_total
+	else die "Usage: net-worth-keeper [--report] [--log] [--raw_total]"
 	end
 end
 
@@ -32,7 +33,8 @@ assets = [
 	{ name: 'Účty a peníze', command: 'homebank-balance --raw-total' },
 	{ name: 'IKS fondy', command: 'iks-portfolio --raw' },
 	{ name: 'Bitcoiny', command: 'btc-wallet-price --raw' },
-	{ name: 'Akcie', command: 'stock-portfolio --raw' }
+	{ name: 'Akcie', command: 'stock-portfolio --raw' },
+	{ name: 'EUR účet', command: 'euro-account' }
 ]
 
 results =
@@ -59,20 +61,22 @@ end
 total = results.values.inject(&:+)
 
 case mode
-	when :report
-		table = Terminal::Table.new do |t|
-			results.each do |asset_name, value|
-				t << [asset_name, "%.2f" % value]
-			end
-			t << :separator
-			t << ["Suma", "%.2f" % total]
+when :report
+	table = Terminal::Table.new do |t|
+		results.each do |asset_name, value|
+			t << [asset_name, "%.2f" % value]
 		end
-		puts table
-	when :log
-		CSV.open(Pathname.new(LOG_PATH).expand_path, "a") do |log|
-			log << [
-				Time.now.strftime("%Y-%m-%d %H:%M:%S"), Time.now.to_i,
-				total
-			] + results.values
-		end
+		t << :separator
+		t << ["Suma", "%.2f" % total]
+	end
+	puts table
+when :log
+	CSV.open(Pathname.new(LOG_PATH).expand_path, "a") do |log|
+		log << [
+			Time.now.strftime("%Y-%m-%d %H:%M:%S"), Time.now.to_i,
+			total
+		] + results.values
+	end
+when :raw_total
+	puts "%.2f" % total
 end

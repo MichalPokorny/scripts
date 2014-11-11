@@ -13,6 +13,12 @@ require 'yaml'
 require 'net/http'
 require 'parallel'
 
+CONFIG_ROOT = Pathname.new("~/.site-watcher")
+
+def config_path(filename)
+	(CONFIG_ROOT + filename).expand_path
+end
+
 class CannotDetermineContent < StandardError; end
 
 class UrlSource
@@ -43,9 +49,9 @@ class NokogiriSource
 	end
 end
 
-confpath = (Pathname.new("~") + ".watched-sites.yml").expand_path
+confpath = config_path("sites.yml")
 unless File.exist?(confpath)
-	STDERR.puts "~/.watched-sites.yml not found."
+	STDERR.puts "#{confpath} not found."
 	exit 1
 end
 
@@ -62,7 +68,7 @@ end
 
 sites = (YAML.load_file(confpath).map { |k, v| [k, create_source(k, v)] } || []).to_h
 
-path = (Pathname.new("~") + ".watched-sites-contents").expand_path
+path = config_path("content.yml")
 downloaded = File.exist?(path) ? YAML.load_file(path) : {}
 downloaded.delete_if { |k, v| !sites.key? k }
 results = Parallel.map(sites.to_a) do |pair|
