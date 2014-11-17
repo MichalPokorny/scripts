@@ -1,10 +1,8 @@
 #!/usr/bin/ruby
 # TODO: -w
-require 'nokogiri'
 require 'terminal-table'
-require 'pathname'
 
-require_relative 'lib/homebank'
+require_relative 'lib/finance/homebank'
 
 @accounting = Prvak::Homebank::Accounting.load
 
@@ -29,10 +27,10 @@ when :overview
 			t << [account.name, "%.2f" % account.total]
 		end
 		t << :separator
-		t << ["Suma", "%.2f" % accounting.total_value]
+		t << ["Suma", "%.2f" % @accounting.total_value]
 	end
 
 	puts table
 when :raw_total
-	puts "%.2f" % accounting.total_value
+	puts "%.2f" % @accounting.total_value
 end

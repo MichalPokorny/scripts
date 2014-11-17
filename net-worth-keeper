@@ -6,6 +6,8 @@
 require 'onlinestatus'
 exit unless OnlineStatus.online?
 
+require_relative 'lib/finance/homebank'
+require_relative 'lib/finance/iks_portfolio'
 require 'terminal-table'
 require 'pathname'
 require 'csv'
@@ -30,8 +32,12 @@ end
 
 # Look out: the order matters
 assets = [
-	{ name: 'Účty a peníze', command: 'homebank-balance --raw-total' },
-	{ name: 'IKS fondy', command: 'iks-portfolio --raw' },
+	{ name: 'Účty a peníze', lambda: -> {
+		Prvak::Finance::Homebank::Accounting.load.total_value
+	} },
+	{ name: 'IKS fondy', lambda: -> {
+		Prvak::Finance::IKSPortfolio.load.value
+	} },
 	{ name: 'Bitcoiny', command: 'btc-wallet-price --raw' },
 	{ name: 'Akcie', command: 'stock-portfolio --raw' },
 	{ name: 'EUR účet', command: 'euro-account' }
@@ -39,16 +45,27 @@ assets = [
 
 results =
 	Parallel.map(assets) { |asset|
-		result = `#{asset[:command]}`.to_f
-		if $?.exitstatus != 0
-			if mode == :report
-				puts "Failed to read asset #{asset[:name]}"
+		if asset[:command]
+			result = `#{asset[:command]}`.to_f
+			if $?.exitstatus != 0
+				if mode == :report
+					puts "Failed to read asset #{asset[:name]}"
+				end
+
+				die
 			end
 
-			die
+			[asset[:name], result]
+		elsif asset[:lambda]
+			begin
+				[asset[:name], asset[:lambda].call]
+			rescue => exception
+				puts "Failed to read asset #{asset[:name]}!"
+				raise
+			end
+		else
+			raise "Invalid asset #{asset[:name]}"
 		end
-
-		[asset[:name], result]
 	}.to_h
 
 unless results.all?

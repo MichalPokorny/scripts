@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 # TODO: -w
 
-require 'iks_scrape'
+require_relative 'lib/finance/iks_portfolio'
 
 # This script calculates the CZK value and current ROI of an IKS portfolio.
 # Store your initial CZK investment and a list of your owned assets in
@@ -29,32 +29,15 @@ until ARGV.empty?
 	end
 end
 
-data = YAML.load_file((Pathname.new('~') + '.iks-portfolio.yml').expand_path)
-assets = data["assets"] or raise "No assets owned."
-invested = data["invested"] or raise "No initial investment specified"
-
-data = IksScrape::Scraper.new.scrape
-
-if (assets.keys - data.keys).any?
-	puts "ERROR: the following assets weren't found: #{assets.keys - data.keys}"
-	puts "Known assets:"
-	pp data
-	exit 1
-end
-
-value =
-	assets.map do |name, count|
-		if data.key?(name)
-			data[name][:price] * count
-		else
-			raise "Unknown asset #{name}"
-		end
-	end.select { |x| x }.inject(&:+)
-
-date = assets.map { |name, _count| data[name][:date] }.compact.max
+portfolio = Prvak::Finance::IKSPortfolio.load
 
 if raw
-	puts "%.2f" % value
+	puts "%.2f" % portfolio.value
 else
-	puts "%.2f Kč (%+.2f Kč / %+.2f%%%s)" % [value, value - invested, (value - invested) / invested * 100.0, date ? " @ #{date}" : ""]
+	puts "%.2f Kč (%+.2f Kč / %+.2f%%%s)" % [
+		portfolio.value,
+		portfolio.gain,
+		portfolio.gain_percentage,
+		portfolio.date ? " @ #{portfolio.date}" : ""
+	]
 end
