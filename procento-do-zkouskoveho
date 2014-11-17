@@ -1,8 +1,0 @@
-#!/usr/bin/ruby -w
-
-start = Time.new(2013, 10, 1)
-lastday = Time.new(2014, 1, 10)
-now = Time.now
-
-diff = (now.to_i - start.to_i).to_f / (lastday.to_i - start.to_i)
-puts "%.2f%%" % (diff * 100)
