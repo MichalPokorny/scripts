@@ -4,74 +4,35 @@ require 'nokogiri'
 require 'terminal-table'
 require 'pathname'
 
-doc = Nokogiri::XML open((Pathname.new('~') + "ucetnictvi.xhb").expand_path)
+require_relative 'lib/homebank'
 
-class Account
-	def initialize(name, key, initial)
-		@name, @key, @initial = name, key, initial
-		@operations = []
-		@total = initial
-	end
-
-	def add_operation(op)
-		@operations << op
-		@total += op.amount
-	end
-
-	attr_reader :name, :total
-end
-
-class Operation
-	def initialize(account, amount)
-		@account, @amount = account, amount
-	end
-
-	attr_reader :account, :amount
-end
-
-@accounts = {}
-doc.xpath('//account').each do |account|
-	# Type 3 = "assets account". We watch those ourselves.
-	next if account.attribute("type").value.to_i == 3
-
-	# Flags 2 probably means "closed".
-	next if account.attribute("flags") && account.attribute("flags").value.to_i & 2
-
-	key = account.attribute("key").value.to_i
-	raise if @accounts.key?(key)
-	@accounts[key] = Account.new(account.attribute("name").value, key, account.attribute("initial").value.to_f)
-end
-
-doc.xpath('//ope').each do |operation|
-	acc = operation.attribute("account").value.to_i
-	operation = Operation.new(acc, operation.attribute("amount").value.to_f)
-	next unless @accounts.key?(acc)
-	@accounts[acc].add_operation(operation)
-end
+@accounting = Prvak::Homebank::Accounting.load
 
 mode = :overview
 
 until ARGV.empty?
 	case ARGV.shift
-	when "--overview" then mode = :overview
-	when "--raw-total" then mode = :raw_total
-	else puts "Usage: homebank-balance [--overview] [--raw-total]"; exit 1
+	when "--overview"
+		mode = :overview
+	when "--raw-total", "--raw_total"
+		mode = :raw_total
+	else
+		puts "Usage: homebank-balance [--overview] [--raw-total]"
+		exit 1
 	end
-end
-
-def calculate_total
-	@accounts.values.map(&:total).inject(&:+)
 end
 
 case mode
 when :overview
-	puts Terminal::Table.new do |t|
-		@accounts.each do |key, account|
+	table = Terminal::Table.new do |t|
+		@accounting.each_account do |account|
 			t << [account.name, "%.2f" % account.total]
 		end
 		t << :separator
-		t << ["Suma", "%.2f" % calculate_total]
+		t << ["Suma", "%.2f" % accounting.total_value]
 	end
+
+	puts table
 when :raw_total
-	puts "%.2f" % calculate_total
+	puts "%.2f" % accounting.total_value
 end
