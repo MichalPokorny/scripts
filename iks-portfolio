@@ -1,8 +1,10 @@
 #!/usr/bin/ruby
 # TODO: -w
 
+require 'iks_scrape'
+
 # This script calculates the CZK value and current ROI of an IKS portfolio.
-# Store your initial CZK investment and a list of your owned shares in
+# Store your initial CZK investment and a list of your owned assets in
 # ~/.iks-portfolio.yml like this:
 #
 #		$ cat ~/.iks-portfolio.yml
@@ -13,53 +15,43 @@
 #			KB Peněžní trh: 3005
 #			KB Vyvážený profil: 123
 
-require 'mechanize'
 require 'date'
 require 'pathname'
-
-data = YAML.load_file((Pathname.new('~') + '.iks-portfolio.yml').expand_path)
-shares = data["assets"] or raise "No assets owned."
-invested = data["invested"] or raise "No initial investment specified"
-
-agent = Mechanize.new
-page = agent.get('http://www.iks-kb.cz/web/fondy_denni_hodnoty.html')
 
 raw = false
 until ARGV.empty?
 	case ARGV.shift
-	when "--raw" then raw = true
-	else puts "Usage: iks-portfolio [--raw]"; exit 1
+	when "--raw"
+		raw = true
+	else
+		puts "Usage: iks-portfolio [--raw]"
+		exit 1
 	end
 end
 
-value = 0
-date = nil
+data = YAML.load_file((Pathname.new('~') + '.iks-portfolio.yml').expand_path)
+assets = data["assets"] or raise "No assets owned."
+invested = data["invested"] or raise "No initial investment specified"
 
-values =
-	page.search("div#fundView tr").map do |tr|
-		contents = tr.search("td").map(&:content).map(&:strip)
-		next unless contents.size >= 3
+data = IksScrape::Scraper.new.scrape
 
-		d = Date.parse(contents[1])
-		date = d if !date || date > d
-
-		stripped = contents[3].gsub(',','.').gsub(/[ ]/,'')
-		price = stripped.to_f
-
-		[contents[0], price]
-	end.compact.to_h
-
-value =
-	shares.map do |name, count|
-		values.key?(name) && values[name] * count
-	end.select { |x| x }.inject(&:+)
-
-if (shares.keys - values.keys).any?
-	puts "ERROR: the following shares weren't found: #{shares.keys - values.keys}"
-	puts "Known shares:"
-	pp values
+if (assets.keys - data.keys).any?
+	puts "ERROR: the following assets weren't found: #{assets.keys - data.keys}"
+	puts "Known assets:"
+	pp data
 	exit 1
 end
+
+value =
+	assets.map do |name, count|
+		if data.key?(name)
+			data[name][:price] * count
+		else
+			raise "Unknown asset #{name}"
+		end
+	end.select { |x| x }.inject(&:+)
+
+date = assets.map { |name, _count| data[name][:date] }.compact.max
 
 if raw
 	puts "%.2f" % value
