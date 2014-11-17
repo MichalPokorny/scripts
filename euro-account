@@ -1,0 +1,14 @@
+#!/usr/bin/ruby
+
+require 'pathname'
+
+eur = File.read(Pathname.new('~/.euro-account').expand_path).to_f
+
+# TODO: tfuj
+require_relative 'btckit/bank.rb'
+require_relative 'btckit/config.rb'
+
+btckit_config = BtcKit::Config.new
+bank = BtcKit::Bank.new(btckit_config.bank_filename)
+
+puts bank.exchange(eur, 'eur', 'CZK').cents
