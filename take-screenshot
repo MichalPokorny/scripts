@@ -1,5 +1,8 @@
-#!/bin/bash
+#!/usr/bin/ruby -w
+require 'pathname'
+require_relative 'lib/xosdutil'
+
 # TODO: save outside home?
-FILE=~prvak/`date +scrot-%Y-%m-%d-%H:%M:%S.png`
-scrot $FILE
-xosdutilctl echo "screen shot saved: `basename $FILE`"
+FILE=Pathname.new("/home/prvak/#{`date +scrot-%Y-%m-%d-%H:%M:%S.png`.strip}").expand_path.to_s
+system 'scrot', FILE
+Prvak.xosdutil_say("Screenshot: #{`basename #{FILE}`}")

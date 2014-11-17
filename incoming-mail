@@ -2,8 +2,9 @@
 
 require 'mail'
 require 'active_support/core_ext' # String#truncate
+require_relative 'lib/xosdutil'
 
 mail = Mail.read_from_string STDIN.each_line.to_a.join("")
 string = "#{mail.from.join ','}: #{mail.subject.truncate(25, omission: "...", separator: " ")}"
 
-system "xosdutilctl", "echo", string
+Prvak.xosdutil_say(string)

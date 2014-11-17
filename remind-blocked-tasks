@@ -1,18 +1,13 @@
 #!/usr/bin/ruby
 
 require 'pathname'
-
-def xosdecho(str)
-	system("xosdutilctl", "echo", str)
-end
-
-exit if rand(3) != 0
+require_relative 'lib/xosdutil'
 
 lines = IO.readlines(Pathname.new("~/zim/Blocked_Tasks.txt").expand_path)
 lines.shift until lines.first.include? "Blocked Tasks"
 lines.shift
 
 5.times do
-	xosdecho lines.shift
+	Prvak.xosdutil_say(lines.shift)
 	break if lines.empty?
 end
