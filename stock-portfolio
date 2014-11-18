@@ -1,81 +1,17 @@
 #!/usr/bin/ruby
 
-require 'pp'
-require 'pathname'
-require 'yaml'
-require 'bigdecimal'
-require 'terminal-table'
-
-require 'yahoo_stock'  # gem 'nas-yahoo_stock'
-
-Stock = Struct.new(:name, :latest_value)
-
-class StockRegistry
-	def initialize
-		@data = {}
-	end
-
-	def request_data(symbols)
-		YahooStock::Quote.new(
-			stock_symbols: symbols,
-			# Use realtime bid if available.
-			# Otherwise, fallback to non-realtime bid.
-			# BUT - the exchange might be closed now. Therefore, we also
-			# need to fallback to last close.
-			read_parameters: [:symbol, :name, :bid, :bid_real_time, :previous_close]
-		).results(:to_hash).output.each do |stock|
-			current_symbol = stock[:symbol]
-			unless symbols.include?(current_symbol)
-				raise "Symbol not requested: #{current_symbol}"
-			end
-
-			bid_string =
-				# (real-time bids seemed weird)
-				# if sane_amount?(stock[:bid_real_time])
-				# 	stock[:bid_real_time]
-				# elsif sane_amount?(stock[:bid])
-				if sane_amount?(stock[:bid])
-					stock[:bid]
-				elsif sane_amount?(stock[:previous_close])
-					stock[:previous_close]
-				else
-					STDERR.puts "Cannot get bid data for #{current_symbol}!"
-					STDERR.puts stock.inspect
-					raise 'Cannot get bid'
-				end
-			bid = BigDecimal.new(bid_string)
-
-			raise "Unexpected: penny stock! Check Yahoo sanitization." if bid < 0.01
-
-			@data[current_symbol.to_sym] = Stock.new(stock[:name], bid)
-		end
-
-		unless symbols.all? { |symbol| @data.key?(symbol.to_sym) }
-			raise "Not all symbols successfully fetched"
-		end
-	end
-
-	def [](symbol)
-		@data[symbol.to_sym]
-	end
-
-	private
-
-	def sane_amount?(string_from_yahoo)
-		string_from_yahoo != 'N/A' && string_from_yahoo != '0.00' && string_from_yahoo != '1.00'
-	end
-end
-
 # TODO: tfuj
 require_relative 'btckit/bank.rb'
 require_relative 'btckit/config.rb'
+
+require_relative 'lib/finance/stocks'
 
 class Main
 	def initialize
 		btckit_config = BtcKit::Config.new
 		@bank = BtcKit::Bank.new(btckit_config.bank_filename)
-		@config = YAML.load_file(Pathname.new("~/.stock-portfolio.yml").expand_path)
-		@registry = StockRegistry.new
+		@portfolio = Prvak::Finance::Stocks::Portfolio.load
+		@registry = Prvak::Finance::Stocks::StockRegistry.new
 
 		@raw_mode = false
 		@verbose_table_mode = false
@@ -98,42 +34,26 @@ class Main
 
 	def main(argv)
 		parse_argv(argv)
-		@registry.request_data(@config['stocks'].keys)
+		@registry.request_data(@portfolio.symbols)
 
-		total_stocks = @config['stocks'].map { |symbol, amount|
-			@registry[symbol].latest_value * amount
-		}.inject(&:+)
-		usd = BigDecimal.new(@config['USD'], 3)  # precision 3
-
-		total_usd = usd + total_stocks
-
-		initial_czk = @config['CZK']
-		total_czk = usd_to_czk(total_usd) + initial_czk
+		@report = Prvak::Finance::Stocks::StatusReport.build(
+			@portfolio,
+			@registry,
+			method(:usd_to_czk)
+		)
 
 		if @verbose_table_mode
-			table = Terminal::Table.new do |t|
-				t << [
-					'Symbol', 'Name', 'Owned stocks',
-					'USD/stock', 'CZK/stock', 'Total CZK value'
-				]
-				t << :separator
-				@config['stocks'].each { |symbol, amount|
-					stock = @registry[symbol]
-					t << [
-						symbol, stock.name, amount, "%.2f" % stock.latest_value,
-						usd_to_czk(stock.latest_value),
-						amount * usd_to_czk(stock.latest_value)
-					]
-				}
-			end
-
-			puts table
+			puts @report.terminal_table
 		end
 
 		if @raw_mode
-			puts total_czk
+			puts @report.total_value_czk
 		else
-			puts '$%.2f + %d Kč (%d Kč)' % [total_usd, initial_czk, total_czk]
+			puts '$%.2f + %d Kč (%d Kč)' % [
+				@report.cash_usd + @report.stock_value_usd,
+				@report.cash_czk,
+				@report.total_value_czk
+			]
 		end
 	end
 
