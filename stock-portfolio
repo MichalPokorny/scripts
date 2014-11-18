@@ -4,7 +4,6 @@ require_relative 'lib/finance/stocks'
 
 class Main
 	def initialize
-
 		@raw_mode = false
 		@verbose_table_mode = false
 	end
