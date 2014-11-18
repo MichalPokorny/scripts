@@ -9,7 +9,7 @@ module Prvak
 		module Stocks
 			Stock = Struct.new(:name, :latest_value)
 
-			class StockRegistry
+			class Registry
 				def initialize
 					@data = {}
 				end
@@ -116,7 +116,13 @@ module Prvak
 				# * Currently held CZK
 
 				# TODO: refactor usd_to_czk
-				def self.build(portfolio, registry, usd_to_czk)
+				def self.build(
+					portfolio: Portfolio.load,
+					registry: Registry.new,
+					usd_to_czk: nil
+				)
+					registry.request_data(portfolio.symbols)
+
 					new(
 						cash: {
 							czk: portfolio.czk_cash,

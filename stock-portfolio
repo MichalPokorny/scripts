@@ -10,8 +10,6 @@ class Main
 	def initialize
 		btckit_config = BtcKit::Config.new
 		@bank = BtcKit::Bank.new(btckit_config.bank_filename)
-		@portfolio = Prvak::Finance::Stocks::Portfolio.load
-		@registry = Prvak::Finance::Stocks::StockRegistry.new
 
 		@raw_mode = false
 		@verbose_table_mode = false
@@ -34,13 +32,7 @@ class Main
 
 	def main(argv)
 		parse_argv(argv)
-		@registry.request_data(@portfolio.symbols)
-
-		@report = Prvak::Finance::Stocks::StatusReport.build(
-			@portfolio,
-			@registry,
-			method(:usd_to_czk)
-		)
+		@report = Prvak::Finance::Stocks::StatusReport.build(usd_to_czk: method(:usd_to_czk))
 
 		if @verbose_table_mode
 			puts @report.terminal_table
