@@ -4,6 +4,8 @@ require 'pathname'
 require 'bigdecimal'
 require 'terminal-table'
 
+require_relative 'currency'
+
 module Prvak
 	module Finance
 		module Stocks
@@ -115,11 +117,10 @@ module Prvak
 				# * Currently held USD
 				# * Currently held CZK
 
-				# TODO: refactor usd_to_czk
 				def self.build(
 					portfolio: Portfolio.load,
 					registry: Registry.new,
-					usd_to_czk: nil
+					usd_to_czk: Prvak::Finance::Currency.method(:usd_to_czk)
 				)
 					registry.request_data(portfolio.symbols)
 

@@ -1,15 +1,9 @@
 #!/usr/bin/ruby
 
-# TODO: tfuj
-require_relative 'btckit/bank.rb'
-require_relative 'btckit/config.rb'
-
 require_relative 'lib/finance/stocks'
 
 class Main
 	def initialize
-		btckit_config = BtcKit::Config.new
-		@bank = BtcKit::Bank.new(btckit_config.bank_filename)
 
 		@raw_mode = false
 		@verbose_table_mode = false
@@ -32,7 +26,7 @@ class Main
 
 	def main(argv)
 		parse_argv(argv)
-		@report = Prvak::Finance::Stocks::StatusReport.build(usd_to_czk: method(:usd_to_czk))
+		@report = Prvak::Finance::Stocks::StatusReport.build
 
 		if @verbose_table_mode
 			puts @report.terminal_table
@@ -47,12 +41,6 @@ class Main
 				@report.total_value_czk
 			]
 		end
-	end
-
-	private
-
-	def usd_to_czk(amount_in_usd)
-		@bank.exchange(amount_in_usd, 'USD', 'CZK').cents
 	end
 end
 
