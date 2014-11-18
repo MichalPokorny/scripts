@@ -1,4 +1,0 @@
-#!/bin/bash
-xrandr --output DP1 --auto
-setxkbmap -option grp:switch,grp:alt_shift_toggle,compose:caps us,cz -variant ,qwerty
-xmodmap ~/.Xmodmap
