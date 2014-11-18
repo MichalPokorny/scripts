@@ -11,6 +11,10 @@ module Prvak
 			def self.usd_to_czk(amount_in_usd)
 				BANK.exchange(amount_in_usd, 'USD', 'CZK').cents
 			end
+
+			def self.eur_to_czk(amount_in_eur)
+				BANK.exchange(amount_in_eur, 'eur', 'CZK').cents
+			end
 		end
 	end
 end

@@ -6,10 +6,6 @@
 require 'onlinestatus'
 exit unless OnlineStatus.online?
 
-# TODO: tfuj
-require_relative 'btckit/bank.rb'
-require_relative 'btckit/config.rb'
-
 require_relative 'lib/finance/homebank'
 require_relative 'lib/finance/iks_portfolio'
 require_relative 'lib/finance/stocks'
@@ -35,9 +31,6 @@ def die(*args)
 	exit 1
 end
 
-btckit_config = BtcKit::Config.new
-@bank = BtcKit::Bank.new(btckit_config.bank_filename)
-
 # Look out: the order matters
 assets = [
 	{ name: 'Účty a peníze', lambda: -> {
@@ -48,9 +41,7 @@ assets = [
 	} },
 	{ name: 'Bitcoiny', command: 'btc-wallet-price --raw' },
 	{ name: 'Akcie', lambda: -> {
-		Prvak::Finance::Stocks::StatusReport.build(usd_to_czk: ->(amount_in_usd) {
-			@bank.exchange(amount_in_usd, 'USD', 'CZK').cents
-		}).total_value_czk
+		Prvak::Finance::Stocks::StatusReport.build.total_value_czk
 	} },
 	{ name: 'EUR účet', command: 'euro-account' }
 ]
