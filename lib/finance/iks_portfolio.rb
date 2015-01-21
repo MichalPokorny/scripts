@@ -13,7 +13,7 @@ module Prvak
 				new(invested: invested, assets: assets)
 			end
 
-			def initialize(invested: invested, assets: assets)
+			def initialize(invested: nil, assets: nil)
 				@invested, @assets = invested, assets
 				@data = nil
 			end
