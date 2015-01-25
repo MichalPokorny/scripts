@@ -1,4 +1,6 @@
 # TODO: tfuj
+require 'json'
+require 'net/http'
 require_relative '../../btckit/bank.rb'
 require_relative '../../btckit/config.rb'
 
@@ -13,7 +15,8 @@ module Prvak
 			end
 
 			def self.eur_to_czk(amount_in_eur)
-				BANK.exchange(amount_in_eur, 'eur', 'CZK').cents
+				body = Net::HTTP.get(URI.parse("http://www.freecurrencyconverterapi.com/api/v3/convert?q=EUR_CZK&compact=y"))
+				JSON.parse(body)["EUR_CZK"]["val"] * amount_in_eur
 			end
 		end
 	end

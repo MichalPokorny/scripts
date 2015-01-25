@@ -67,7 +67,7 @@ class Duplicates
 	end
 
 	def confirm_deletion?
-		puts duplicates.each(&method(:puts))
+		each(&method(:puts))
 		puts
 		HighLine.new.agree("Delete the files? [y/n] ")
 	end

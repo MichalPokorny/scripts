@@ -3,100 +3,62 @@
 
 # TODO: plotting
 
-require 'onlinestatus'
-exit unless OnlineStatus.online?
-
-require_relative 'lib/finance/homebank'
-require_relative 'lib/finance/iks_portfolio'
-require_relative 'lib/finance/stocks'
-require 'terminal-table'
-require 'pathname'
-require 'csv'
-require 'parallel'
-
-LOG_PATH = "~/misc/net-worth.csv"
-
-mode = :report
-until ARGV.empty?
-	case ARGV.shift
-	when "--log" then mode = :log
-	when "--report" then mode = :report
-	when "--raw_total" then mode = :raw_total
-	else die "Usage: net-worth-keeper [--report] [--log] [--raw_total]"
-	end
-end
-
 def die(*args)
 	STDERR.puts(*args) unless args.empty?
 	exit 1
 end
 
-# Look out: the order matters
-assets = [
-	{ name: 'Účty a peníze', lambda: -> {
-		Prvak::Finance::Homebank::Accounting.load.total_value
-	} },
-	{ name: 'IKS fondy', lambda: -> {
-		Prvak::Finance::IKSPortfolio.load.value
-	} },
-	{ name: 'Bitcoiny', command: 'btc-wallet-price --raw' },
-	{ name: 'Akcie', lambda: -> {
-		Prvak::Finance::Stocks::StatusReport.build.total_value_czk
-	} },
-	{ name: 'EUR účet', command: 'euro-account' }
-]
+require 'onlinestatus'
+die unless OnlineStatus.online?
 
-results =
-	Parallel.map(assets) { |asset|
-		if asset[:command]
-			result = `#{asset[:command]}`.to_f
-			if $?.exitstatus != 0
-				if mode == :report
-					puts "Failed to read asset #{asset[:name]}"
-				end
+require_relative 'lib/finance/net_worth'
+require 'terminal-table'
+require 'pathname'
+require 'csv'
 
-				die
-			end
+LOG_PATH = "~/misc/net-worth.csv"
 
-			[asset[:name], result]
-		elsif asset[:lambda]
-			begin
-				[asset[:name], asset[:lambda].call]
-			rescue => exception
-				puts "Failed to read asset #{asset[:name]}!"
-				raise
-			end
-		else
-			raise "Invalid asset #{asset[:name]}"
-		end
-	}.to_h
+display_mode = :report
+do_log = false
 
-unless results.all?
-	if mode == :report
-		puts "Something failed :("
+until ARGV.empty?
+	case ARGV.shift
+	when '--log'
+		do_log = true
+	when '--report'
+		display_mode = :report
+	when '--raw_total'
+		display_mode = :raw_total
+	when '--quiet'
+		display_mode = :quiet
+	else
+		die "Usage: net-worth-keeper [--log] [--report / --raw_total]"
 	end
-	die
 end
 
-total = results.values.inject(&:+)
-
-case mode
-when :report
-	table = Terminal::Table.new do |t|
-		results.each do |asset_name, value|
-			t << [asset_name, "%.2f" % value]
-		end
-		t << :separator
-		t << ["Suma", "%.2f" % total]
-	end
-	puts table
-when :log
+if do_log
 	CSV.open(Pathname.new(LOG_PATH).expand_path, "a") do |log|
 		log << [
 			Time.now.strftime("%Y-%m-%d %H:%M:%S"), Time.now.to_i,
-			total
-		] + results.values
+			Prvak::Finance::NetWorth.net_worth
+		] + Prvak::Finance::NetWorth.load_assets_lazy.values
 	end
+end
+
+case display_mode
+when :report
+	table = Terminal::Table.new do |t|
+		Prvak::Finance::NetWorth.load_assets_lazy.each do |asset_name, value|
+			t << [asset_name, "%.2f" % value]
+		end
+		t << :separator
+		t << ["Suma", "%.2f" % Prvak::Finance::NetWorth.net_worth]
+	end
+	puts table
 when :raw_total
-	puts "%.2f" % total
+	puts "%.2f" % Prvak::Finance::NetWorth.net_worth
+when :quiet
+	# nothing
+else
+	raise
 end
