@@ -1,7 +1,0 @@
-#!/usr/bin/ruby
-
-require_relative 'lib/finance/currency'
-require 'pathname'
-
-eur = File.read(Pathname.new('~/.euro-account').expand_path).to_f
-puts Prvak::Finance::Currency.eur_to_czk(eur)

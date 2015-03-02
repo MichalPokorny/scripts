@@ -1,6 +1,5 @@
 require_relative 'homebank'
 require_relative 'iks_portfolio'
-require_relative 'stocks'
 require 'parallel'
 
 module Prvak
@@ -14,15 +13,9 @@ module Prvak
 				{ name: 'IKS fondy', lambda: -> {
 					Prvak::Finance::IKSPortfolio.load.value
 				} },
-				{ name: 'Bitcoiny', lambda: -> {
-					result = `worthy -mode bitcoin`
-					raise if $?.exitstatus != 0
-					result.to_f
-				} },
-				{ name: 'Akcie', lambda: -> {
-					Prvak::Finance::Stocks.total_value_czk
-				} },
-				{ name: 'EUR účet', command: 'euro-account' }
+				{ name: 'Bitcoiny', command: 'worthy -mode bitcoin' },
+				{ name: 'Akcie', command: 'worthy -mode broker' },
+				{ name: 'EUR účet', command: 'worthy -mode euro_account' }
 			]
 
 			class AssetReadingFailed < StandardError
