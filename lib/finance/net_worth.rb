@@ -15,9 +15,9 @@ module Prvak
 					Prvak::Finance::IKSPortfolio.load.value
 				} },
 				{ name: 'Bitcoiny', lambda: -> {
-					# TODO: fuj
-					require_relative '../../btckit/bitcoin-price'
-					BtcKit::BtcPrice.new.current_wallet_value
+					result = `worthy -mode bitcoin`
+					raise if $?.exitstatus != 0
+					result.to_f
 				} },
 				{ name: 'Akcie', lambda: -> {
 					Prvak::Finance::Stocks.total_value_czk
