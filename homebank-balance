@@ -4,7 +4,7 @@ require 'terminal-table'
 
 require_relative 'lib/finance/homebank'
 
-@accounting = Prvak::Homebank::Accounting.load
+@accounting = Prvak::Finance::Homebank::Accounting.load
 
 mode = :overview
 
