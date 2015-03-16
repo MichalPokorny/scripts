@@ -1,17 +1,18 @@
 #!/bin/bash
 TODOS_FILE="todos"
 
+# Or possibly ack
+SEARCH=ag
+
 if [ -d app ]; then
 	cd app
 	source $0
 	cd ..
 else
-	ack todo -i .
+	$SEARCH todo -i .
 fi
 
 if [ -f "$TODOS_FILE" ]; then
 	echo
-	ack -i todo "$TODOS_FILE"
+	$SEARCH -i todo "$TODOS_FILE"
 fi
-
-
