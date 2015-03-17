@@ -15,7 +15,9 @@ module Prvak
 				} },
 				{ name: 'Bitcoiny', command: 'worthy -mode bitcoin' },
 				{ name: 'Akcie', command: 'worthy -mode broker' },
-				{ name: 'EUR účet', command: 'worthy -mode euro_account' }
+
+				# Legacy. TODO: hide from table
+				{ name: 'EUR účet', lambda: -> { 0 } }
 			]
 
 			class AssetReadingFailed < StandardError
