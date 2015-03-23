@@ -4,12 +4,12 @@ RANGE = (1..37)
 computer = 1
 
 if ARGV.size > 0
-	arg = ARGV.shift
-	if arg =~ /\d+/
+	case ARGV[0]
+	when /\d+/
 		computer = arg
-	elsif arg == '-r'
+	when '-r'
 		computer = RANGE.to_a.shuffle[0]
 	end
 end
 
-exec "ssh", "pokormi2@u-pl#{computer}.ms.mff.cuni.cz", *ARGV
+exec 'ssh', "pokormi2@u-pl#{computer}.ms.mff.cuni.cz", '-XC', *ARGV
