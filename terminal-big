@@ -1,9 +1,0 @@
-#!/bin/bash
-
-if [ $1 ]; then
-	SIZE=$1;
-else
-	SIZE=30
-fi
-
-xterm -fa "xft:Terminus:pixelsize=$SIZE";
