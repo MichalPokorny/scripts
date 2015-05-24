@@ -1,4 +1,10 @@
 #!/bin/bash
+# Inserts current battery data into a log file.
+# Idea borrowed from:
+#  http://www.ifweassume.com/2013/08/the-de-evolution-of-my-laptop-battery.html
+#  https://github.com/jradavenport/batlog
+# I just like to track my (mis)habits.
+
 BAT_DIR=/sys/class/power_supply/BAT0
 LOG=/home/prvak/misc/battest.log
 
