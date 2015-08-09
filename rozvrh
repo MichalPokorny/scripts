@@ -1,2 +1,0 @@
-#!/bin/bash
-evince /home/prvak/misc/rozvrh.pdf &
