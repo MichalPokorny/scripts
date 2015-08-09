@@ -76,7 +76,7 @@ unless @mounted_dirs.include? "/mnt/crypto"
 	system "mount /dev/mapper/crypto /mnt/crypto"
 end
 
-%w{downloads crypto fotky .bitcoin}.each do |mount|
+%w{downloads crypto .bitcoin}.each do |mount|
 	if @mounted_dirs.include? "/home/prvak/#{mount}"
 		puts "#{mount} already mounted"
 	else
