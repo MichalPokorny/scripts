@@ -1,6 +1,6 @@
 #!/bin/bash
 
-WALLPAPER_DIR="/home/prvak/wallpapers/"
+WALLPAPER_DIR="/home/prvak/Dropbox/wallpapers/"
 
 if [ "$#" -eq 0 ]; then
 	WALLPAPER=`ls $WALLPAPER_DIR | sort --random-sort | head -1`
