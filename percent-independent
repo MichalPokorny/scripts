@@ -3,7 +3,7 @@
 require 'yaml'
 require 'pathname'
 
-CONFIG=YAML.load_file(Pathname.new("~/.financial_independence.yml").expand_path)
+CONFIG=YAML.load_file(Pathname.new("~/Dropbox/finance/financial_independence.yml").expand_path)
 #
 # How much do I want? (monthly) (input parameter)
 MONTHLY_SPENDING = CONFIG['monthly_spending']
