@@ -27,12 +27,10 @@ until ARGV.empty?
 		do_log = true
 	when '--report'
 		display_mode = :report
-	when '--raw_total'
-		display_mode = :raw_total
 	when '--quiet'
 		display_mode = :quiet
 	else
-		die "Usage: net-worth-keeper [--log] [--report / --raw_total]"
+		die "Usage: net-worth-keeper [--log] [--report]"
 	end
 end
 
@@ -55,8 +53,6 @@ when :report
 		t << ["Suma", "%.2f" % Prvak::Finance::NetWorth.net_worth]
 	end
 	puts table
-when :raw_total
-	puts "%.2f" % Prvak::Finance::NetWorth.net_worth
 when :quiet
 	# nothing
 else
