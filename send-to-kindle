@@ -1,0 +1,2 @@
+#!/bin/bash
+mutt -s "send-to-kindle $(date)" -a $* -- mp_698@kindle.com < /dev/null
