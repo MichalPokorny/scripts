@@ -62,6 +62,8 @@ end
 
 # TODO: assert completion.
 system "umount -A #{MAPPER_DEVICE}"
+raise 'Failed to unmount' if $?.exitstatus != 0
 system "cryptsetup luksClose #{MAPPING}"
+
 
 puts "Crypto unmounted at #{Time.now.to_s}"
