@@ -6,7 +6,7 @@
 # I just like to track my (mis)habits.
 
 BAT_DIR=/sys/class/power_supply/BAT0
-LOG=/home/prvak/misc/battest.log
+LOG=/home/prvak/misc/battest/battest.log.`date +%Y-%m-%d`
 
 echo "EPOCH=$(date -u +%s)" >> $LOG
 echo "DATE=$(date)" >> $LOG

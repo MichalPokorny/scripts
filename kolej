@@ -1,7 +1,7 @@
 #!/bin/bash
 
-LEFT=HDMI3
-RIGHT=DP2
+LEFT=DP2
+RIGHT=HDMI3
 
 output_connected() {
 	xrandr | grep "$1 connected" > /dev/null
