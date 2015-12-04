@@ -3,7 +3,7 @@ require 'iks_scrape'
 module Prvak
 	module Finance
 		class IKSPortfolio
-			CONFIGURATION_FILE = Pathname.new('~/Dropbox/finance/iks-portfolio.yml').expand_path
+			CONFIGURATION_FILE = Pathname.new('~/dropbox/finance/iks-portfolio.yml').expand_path
 
 			def self.load(file = CONFIGURATION_FILE)
 				data = YAML.load_file(file)

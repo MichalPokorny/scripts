@@ -6,7 +6,7 @@ require 'nokogiri'
 module Prvak
 	module Finance
 		module Homebank
-			MAIN_ACCOUNTING_FILE = (Pathname.new('~/Dropbox/ucetnictvi.xhb')).expand_path
+			MAIN_ACCOUNTING_FILE = (Pathname.new('~/dropbox/finance/ucetnictvi.xhb')).expand_path
 
 			class Account
 				def initialize(name, key, initial)

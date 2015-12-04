@@ -2,7 +2,7 @@
 
 require 'open3'
 
-DEVICE="/dev/disk/by-uuid/7bdee7dd-4c49-4d99-87f8-5b40dccfd1e3"
+DEVICE="/dev/disk/by-uuid/c22c406b-029d-469a-9536-45916e529f22"
 
 def die(*args)
 	STDERR.puts(*args)
@@ -74,18 +74,6 @@ end
 unless @mounted_dirs.include? "/mnt/crypto"
 	puts "mounting /mnt/crypto"
 	system "mount /dev/mapper/crypto /mnt/crypto"
-end
-
-%w{downloads crypto .bitcoin}.each do |mount|
-	if @mounted_dirs.include? "/home/prvak/#{mount}"
-		puts "#{mount} already mounted"
-	else
-		target = "/home/prvak/#{mount}"
-		raise "#{target} is dirty: not a directory" unless File.directory?(target)
-		raise "#{target} is dirty!" unless (Dir.entries(target) - %w{. ..}).empty?
-		puts "mounting #{mount}"
-		system "mount -o bind /mnt/crypto/#{mount} /home/prvak/#{mount}"
-	end
 end
 
 puts "starting mail services"

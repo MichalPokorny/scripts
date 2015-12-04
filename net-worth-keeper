@@ -16,7 +16,7 @@ require 'terminal-table'
 require 'pathname'
 require 'csv'
 
-LOG_PATH = "~/Dropbox/finance/net-worth.csv"
+LOG_PATH = "~/dropbox/finance/net-worth.csv"
 
 display_mode = :report
 do_log = false
