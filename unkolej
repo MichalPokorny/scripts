@@ -1,7 +1,7 @@
 #!/bin/bash
 
-LEFT=HDMI3
-RIGHT=DP2
+LEFT=DP2
+RIGHT=HDMI3
 
 xrandr --output $LEFT --off
 xrandr --output $RIGHT --off
@@ -9,3 +9,5 @@ xrandr --output LVDS1 --auto
 killall xosdutil
 sudo -u prvak xosdutil &
 change-wallpaper
+
+keyboard-setup

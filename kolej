@@ -24,11 +24,5 @@ setup_displays() {
 	fi
 }
 
-setup_keyboard() {
-	# Keyboard stuff
-	setxkbmap -option grp:switch,grp:alt_shift_toggle,compose:caps us,cz -variant ,qwerty
-	xmodmap ~/.Xmodmap
-}
-
 setup_displays
-setup_keyboard
+keyboard-setup
