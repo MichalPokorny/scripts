@@ -1,4 +1,3 @@
-require_relative 'homebank'
 require_relative 'iks_portfolio'
 require 'parallel'
 
@@ -7,9 +6,7 @@ module Prvak
 		module NetWorth
 			# Look out: the order matters (for CSV output)
 			ASSETS = [
-				{ name: 'Účty a peníze', lambda: -> {
-					Prvak::Finance::Homebank::Accounting.load.total_value
-				} },
+				{ name: 'Účty a peníze', command: 'worthy -mode money' },
 				{ name: 'IKS fondy', lambda: -> {
 					Prvak::Finance::IKSPortfolio.load.value
 				} },

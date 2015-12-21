@@ -26,7 +26,8 @@ INTEREST_RATE = 0.04
 
 puts "Assumed compound interest rate: %.2f%%" % (INTEREST_RATE * 100)
 
-TOTAL_YEARS = 60
+#TOTAL_YEARS = 60
+TOTAL_YEARS = 80
 
 puts "Total assumed years: #{TOTAL_YEARS}"
 
