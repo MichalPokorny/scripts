@@ -5,12 +5,11 @@ Repository of glue and duct tape holding my computer together.
 
 # My crontab
 * `battest` every minute
-* `backup` every noon
 
 ## Every now and then:
 * `test-server`
 * `privatize`
 * mail-queue-check`
-* `net-worth-keeper --log --quiet`
+* `worthy -log_to_csv -mode silent`
 * `site-watcher`
 * `remind-blocked-tasks`
