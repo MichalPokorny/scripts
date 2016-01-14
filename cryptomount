@@ -50,15 +50,13 @@ if ARGV.shift == "--is-mounted"
 	exit crypto_active? ? 0 : 1
 end
 
-require 'highline'
+require 'highline/import'
 if crypto_active?
 	puts "crypto mapping already active."
 else
 	passphrase = nil
 	loop do
-		passphrase = HighLine.ask("Password? ") { |q|
-			q.echo = "*" # false
-		}
+		passphrase = ask("Password? ") { |q| q.echo = '*' }
 		break if passphrase_ok?(passphrase)
 		puts "Sorry, try again."
 	end
