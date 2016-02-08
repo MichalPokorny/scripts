@@ -12,15 +12,16 @@ commandline = ['/home/prvak/bin/kbcsvgrab/kbcsvgrab-phantomjs',
 p = subprocess.Popen(commandline, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                      stderr=subprocess.PIPE, close_fds=True)
 returncode = p.wait()
-if returncode != 0:
-    print("JS stuff failed")
-    sys.exit(1)
 
 stdout = p.stdout.read()
 print(stdout)
 print()
 stderr = p.stderr.read()
 print(stderr)
+
+if returncode != 0:
+    print("JS stuff failed")
+    sys.exit(1)
 
 lines = stderr.decode("utf-8").splitlines()
 if 'downloading to' not in lines[-1]:
