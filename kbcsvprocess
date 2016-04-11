@@ -1,0 +1,14 @@
+#!/usr/bin/python3
+
+import sys
+import time
+import shutil
+import subprocess
+
+source = sys.argv[1]
+subprocess.check_output(['enconv', '-L', 'cs', source])
+
+date = time.strftime("%Y-%m-%d")
+target = "/home/prvak/dropbox/finance/vypisy/" + date + ".csv"
+shutil.move(source, target)
+print("%s => %s" % (source, target))
