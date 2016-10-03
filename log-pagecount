@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+
+cd /home/prvak/master/text
+make >/dev/null
+COUNT=`pdfinfo /home/prvak/master/text/thesis.pdf | grep Pages: | cut -d\  -f11`
+DATE=`date +%Y%m%d%H%M`
+echo $DATE $COUNT >> /home/prvak/misc/master-pagecount-log.log
+
+SLOC_LOGFILE=/home/prvak/misc/master-sloc-log.log
+echo "---- CUT ----" >> $SLOC_LOGFILE
+echo $DATE >> $SLOC_LOGFILE
+cloc /home/prvak/master/code >> $SLOC_LOGFILE
