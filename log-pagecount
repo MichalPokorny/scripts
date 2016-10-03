@@ -11,3 +11,5 @@ SLOC_LOGFILE=/home/prvak/misc/master-sloc-log.log
 echo "---- CUT ----" >> $SLOC_LOGFILE
 echo $DATE >> $SLOC_LOGFILE
 cloc /home/prvak/master/code >> $SLOC_LOGFILE
+
+sloc-count-to-log.py
