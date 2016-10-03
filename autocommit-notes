@@ -1,0 +1,4 @@
+#!/bin/bash
+cd /home/prvak/notes
+git add .
+git commit --all -m "Autocommit: $(date +%Y%m%d-%H%M)" --quiet --no-status
