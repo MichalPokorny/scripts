@@ -1,4 +1,14 @@
 #!/bin/bash
+MESSAGE="Autocommit: $(date +%Y%m%d-%H%M)"
+
+cd /home/prvak/repos/public-notes
+
+pacman -Qe | cut -d' ' -f1 > generated/$(hostname)-packages.txt
+
+git add .
+git commit --all --quiet --no-status -m "$MESSAGE"
+git push
+
 cd /home/prvak/notes
 git add .
-git commit --all -m "Autocommit: $(date +%Y%m%d-%H%M)" --quiet --no-status
+git commit --all --quiet --no-status -m "$MESSAGE"
