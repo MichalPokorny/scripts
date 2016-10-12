@@ -1,14 +1,32 @@
-#!/bin/bash
-MESSAGE="Autocommit: $(date +%Y%m%d-%H%M)"
+#!/usr/bin/python
 
-cd /home/prvak/repos/public-notes
+import subprocess
+import os
+import datetime
 
-pacman -Qe | cut -d' ' -f1 > generated/$(hostname)-packages.txt
+message = "Autocommit: " + datetime.datetime.now().strftime("%Y%m%d-%H%M")
+os.chdir('/home/prvak/repos/public-notes')
+hostname = subprocess.check_output("hostname").decode('utf-8').strip()
 
-git add .
-git commit --all --quiet --no-status -m "$MESSAGE"
-git push
+with open('structured/generated/' + hostname + '-packages.ttl', 'w') as f:
+    f.write("""@prefix : <http://rny.cz/knowledge#> .
 
-cd /home/prvak/notes
-git add .
-git commit --all --quiet --no-status -m "$MESSAGE"
+""")
+
+    for package in subprocess.check_output("pacman -Qeq", shell=True).decode('utf-8').split('\n'):
+        package = package.strip()
+        if not package:
+            continue
+        f.write(":%s :installed-on :%s .\n" % (package, hostname))
+
+assert subprocess.call(['git', 'add', '.']) == 0
+if subprocess.call(['git', 'diff', '--quiet', '--exit-code', '--cached']) != 0:
+    assert subprocess.call(['git', 'commit', '--all', '--quiet', '--no-status',
+                            '-m', message]) == 0
+    assert subprocess.call(['git', 'push']) == 0
+
+os.chdir('/home/prvak/notes')
+assert subprocess.call(['git', 'add', '.']) == 0
+if subprocess.call(['git', 'diff', '--quiet', '--exit-code', '--cached']) != 0:
+    assert subprocess.call(['git', 'commit', '--all', '--quiet', '--no-status',
+                            '-m', message]) == 0
