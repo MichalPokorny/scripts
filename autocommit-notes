@@ -6,8 +6,6 @@ import datetime
 
 def write_packages(hostname, package_list):
     with open('generated/' + hostname + '-packages.ttl', 'w') as f:
-        f.write("@prefix : <http://rny.cz/knowledge#> .\n")
-
         for package in package_list:
             package = package.strip()
             if not package:
