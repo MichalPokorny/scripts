@@ -1,2 +1,0 @@
-#!/bin/bash
-scp $@ pokormi2@u-pl1.ms.mff.cuni.cz:~/tmp/

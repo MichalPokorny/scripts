@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# basic
-# ssh zuphux.metacentrum.cz $*
-
-# has Hadoop
-ssh hador.ics.muni.cz -C $*

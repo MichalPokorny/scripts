@@ -1,9 +1,0 @@
-#!/usr/bin/ruby
-
-require 'mail'
-require 'active_support/core_ext/string/filters'  # String#truncate
-require_relative 'lib/xosdutil'
-
-mail = Mail.read_from_string(STDIN.read)
-string = "#{mail.from.join ','}: #{mail.subject.truncate(25, omission: '...', separator: ' ')}"
-Prvak.xosdutil_say(string)

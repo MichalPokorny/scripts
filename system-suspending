@@ -1,3 +1,0 @@
-#!/bin/bash
-/home/prvak/bin/cryptounmount --just-try
-DISPLAY=:0 sudo -u prvak xscreensaver-command -lock
