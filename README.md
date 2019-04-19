@@ -7,8 +7,4 @@ Repository of glue and duct tape holding my computer together.
 * `battest` every minute
 
 ## Every now and then:
-* `test-server`
-* mail-queue-check`
-* `worthy -log_to_csv -mode silent`
-* `site-watcher`
-* `autocommit-notes`
+* `worthy`
