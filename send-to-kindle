@@ -1,5 +1,0 @@
-#!/bin/bash
-for file in "$@"; do
-	mutt -s "send-to-kindle $(date)" -a "$file" -- mp_698@kindle.com < /dev/null
-	echo "sent $file"
-done
