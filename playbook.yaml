@@ -1,6 +1,54 @@
 ---
+# TODO: telegram
+
+# laptop:
+#  - blueman
+#  - tuxguitar
+#  - dropbox
+#  - qshutdown
+#  - gimp
+#  - krita
+#  - perl
+#  - slic3r
+#  - steam
+#  - transmission-gtk
+#  - virtualbox
+#  - virtualbox-dkms
+#  - wireshark
+#  - wine-stable
+#  - acpi
+#  - alarm-clock-applet
+#  - android-tools-adb
+#  - blender
+#  - vinagre --- remote desktop
+#  - zoom    --- for meetings
+#  - xournal
+#  - xserver-xorg-video-intel
+#  - openjdk-8-jdk
+#  - playonlinux
+#  - rescuetime
+#  - bolt   (for multiple graphic cards)
+#  - ifupdown
+#  - pencil2d
+#  - gnupg
+#  - gpgv
+#  - gnupg-agent
+#  - gnupg-l10n
+#  - gnome-shell
+#  - gnome-tweaks
+#  - google-cloud-sdk
+#  - google-musicmanager-beta
+#  - ubuntu-desktop
+#  - ubuntu-gnome-desktop
+#  - ubuntu-restricted-extras
+#  - chrome-gnome-shell
+#  - vagrant
+#  - bsdutils
+
 - hosts: cloudragon
-  remote_user: agentydragon_gmail_com
+  vars:
+    my_user: agentydragon_gmail_com
+  remote_user: "{{ my_user }}"
   tasks:
   - name: update everything
     become: yes
@@ -11,10 +59,74 @@
     become: yes
     apt:
       pkg:
-      - anki
-      - vim
-      - rcm
       - cinnamon-desktop-environment
+      - curl
+      - diffutils
+      - fonts-powerline
+      - geeqie
+      - git
+      - htop
+      - iotop
+      - iputils-ping
+      - libreoffice
+      - mc
+      - mmv
+      - mplayer
+      - mpv
+      - netcat-openbsd
+      - nethogs
+      - pkg-config
+      - pv
+      - pwgen
+      - rcm
+      - screen
+      - sed
+      - tree
+      - vim-gtk
+      - wget
+      - xclip
+      - zsh
+  - name: install Anki
+    become: yes
+    apt:
+      pkg:
+      - anki
+      - dvipng        # for Anki cards
+      - fonts-roboto  # for Anki cards
+      - texlive-full  # for Anki cards
+      - youtube-dl    # for Anki cards
+  - name: install dev env
+    become: yes
+    apt:
+      pkg:
+      - ansible
+      - asciidoc
+      - bazel
+      - cabal-install
+      - clang
+      - clang-format
+      - cloc
+      - docker-ce
+      - gcc
+      - ghc
+      - gitk
+      - gnuplot
+      - golang
+      - gradle
+      - jshon
+      - jupyter-nbconvert
+      - make
+      - markdown
+      - maven
+      - npm
+      - protobuf-compiler
+      - pyqt5-dev-tools
+      - python3
+      - python3-pip
+      - ruby
+      - silversearcher-ag
+      - sloccount
+      - tidy  # HTML tidy
   - name: install chrome
     become: yes
     apt:
@@ -89,49 +201,49 @@
     block:
     - name: Check to See if Git Repo Exists
       stat:
-        path: /home/agentydragon_gmail_com/.dotfiles
+        path: "/home/{{ my_user }}/.dotfiles"
       register: stat_repo
     - name: clone dotfiles
       git:
         repo: https://github.com/agentydragon/dotfiles
-        dest: /home/agentydragon_gmail_com/.dotfiles
+        dest: "/home/{{ my_user }}/.dotfiles"
       when: stat_repo.stat.exists is not defined or stat_repo.stat.exists == false
     # TODO: maybe pull dotfiles to latest version?
     # TODO: problem: this is interactive if the files already exist.
     #  - set_fact:
     #      # Running without -f, so existing dotfiles won't be overwritten.
-    #      rcup_args: "-x README.md -x LICENSE -d /home/agentydragon_gmail_com/.dotfiles -B cloudragon"
+    #      rcup_args: "-x README.md -x LICENSE -d /home/{{ my_user }}/.dotfiles -B cloudragon"
     #  - name: Run rcup to Deploy Dotfiles
     #    command: "rcup {{ rcup_args }}"
   - name: Set up custom scripts
     block:
     - name: Check to See if Git Repo Exists
       stat:
-        path: /home/agentydragon_gmail_com/scripts
+        path: "/home/{{ my_user }}/scripts"
       register: stat_scripts
     - name: Clone scripts
       git:
         repo: https://github.com/agentydragon/scripts
-        dest: /home/agentydragon_gmail_com/bin
+        dest: "/home/{{ my_user }}/bin"
       when: stat_scripts.stat.exists is not defined or stat_scripts.stat.exists == false
 
   - name: Vim setup
     block:
     - name: Check Vundle
       stat:
-        path: /home/agentydragon_gmail_com/.vim/bundle/Vundle.vim
+        path: "/home/{{ my_user }}/.vim/bundle/Vundle.vim"
       register: stat_vundle
     - name: Clone Vundle
       git:
         repo: https://github.com/VundleVim/Vundle.vim.git
-        dest: /home/agentydragon_gmail_com/.vim/bundle/Vundle.vim
+        dest: "/home/{{ my_user }}/.vim/bundle/Vundle.vim"
       when: stat_vundle.stat.exists is not defined or stat_vundle.stat.exists == false
     - name: install vim plugins
       # https://stackoverflow.com/questions/33672491/how-to-use-ansible-to-provision-vim-vundle-plugin
       shell: vim -E -c "source ~/.vimrc" -c PluginInstall -c qa
     # TODO: update Vundle
 
-# TODO: create a password for the user to avoid lock screen
+# TODO: maybe create a password for the user to avoid lock screen?
 # TODO: configure anki with a password
 
   - name: set applets and favorite apps
@@ -146,47 +258,60 @@
   # TODO: might not be needed anymore
   - name: add github's key to known hosts
     blockinfile:
-      path: /home/agentydragon_gmail_com/.ssh/known_hosts
+      path: "/home/{{ my_user }}/.ssh/known_hosts"
       create: true
       # The following key comes from the github.com pubkey as of 2020-01-24.
       # Retrieved with:
       #   ssh-keyscan -t rsa github.com
       block: |
         github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
-
-  - name: set solarized light terminal colors
+  - name: gnome-terminal
+    tags:
+      - gnome-terminal
     block:
-      - command: dconf reset -f /org/gnome/terminal/legacy
-      - dconf:
-          key: /org/gnome/terminal/legacy/default-show-menubar
-          value: "false"
-      - dconf:
-          key: /org/gnome/terminal/legacy/schema-version
-          value: "uint32 3"
-      - dconf:
-          key: /org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9/background-color
-          value: "'#fdfdf6f6e3e3'"
-      - dconf:
-          key: /org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9/bold-color
-          value: "'#58586e6e7575'"
-      - dconf:
-          key: /org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9/bold-color-same-as-fg
-          value: "false"
-      - dconf:
-          key: /org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9/font
-          value: "'Ubuntu Mono 9'"
-      - dconf:
-          key: /org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9/foreground-color
-          value: "'#65657b7b8383'"
-      - dconf:
-          key: /org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9/palette
-          value: "['#070736364242', '#DCDC32322F2F', '#858599990000', '#B5B589890000', '#26268B8BD2D2', '#D3D336368282', '#2A2AA1A19898', '#EEEEE8E8D5D5', '#00002B2B3636', '#CBCB4B4B1616', '#58586E6E7575', '#65657B7B8383', '#838394949696', '#6C6C7171C4C4', '#9393A1A1A1A1', '#FDFDF6F6E3E3']"
-      - dconf:
-          key: /org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9/use-system-font
-          value: "false"
-      - dconf:
-          key: /org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9/use-theme-colors
-          value: "false"
-      - dconf:
-          key: /org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9/use-theme-transparency
-          value: "false"
+    - name: Set gnome-terminal to Solarized Light
+      tags:
+        - solarized
+      block:
+        - tempfile:
+            state: directory
+            suffix: gnome-terminal-solarized
+          register: temp_dir
+        # TODO: would be nice to check integrity, with a particular commit
+        - git:
+            repo: https://github.com/aruhier/gnome-terminal-colors-solarized
+            dest: "{{ temp_dir.path }}"
+            depth: 1
+        - name: Get gnome-terminal profile UUID
+          shell: >
+            gsettings get org.gnome.Terminal.ProfilesList list | tr -d "[]\',"
+          register: profile_uuid
+        - name: Set up gnome-terminal-colors-solarized
+          command: |
+            dbus-launch {{ temp_dir.path }}/install.sh
+              -s light
+              -p {{ profile_uuid.stdout }}
+              --install-dircolors
+    - name: hide gnome-terminal menu
+      command: |
+        gsettings set
+          org.gnome.Terminal.Legacy.Settings default-show-menubar false
+    # TODO: set a scrollbar policy?
+    # TODO: scrollback limit - not 10k?
+    # TODO: use ubuntu mono font in terminal
+    # gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/" default-size-columns 150
+    # TODO: set font size
+  - name: Set custom datetime indicator
+    block:
+    - dconf:
+        key: /com/canonical/indicator/datetime/time-format
+        value: "'custom'"
+    - dconf:
+        key: /com/canonical/indicator/datetime/custom-time-format
+        value: "'%Y-%m-%d %H:%M:%S'"
+    - dconf:
+        key: /com/canonical/indicator/datetime/show-week-numbers
+        value: "true"
+  - snap:
+      name:
+        - telegram-desktop
