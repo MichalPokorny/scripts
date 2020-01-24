@@ -118,8 +118,7 @@
     - name: install vim plugins
       # https://stackoverflow.com/questions/33672491/how-to-use-ansible-to-provision-vim-vundle-plugin
       shell: vim -E -c "source ~/.vimrc" -c PluginInstall -c qa
-# TODO: update Vundle
-# issue: do *NOT* add the "url "git@github.com:" in .gitconfig
+    # TODO: update Vundle
 
 # TODO: create a password for the user to avoid lock screen
 # TODO: configure anki with a password
