@@ -55,6 +55,11 @@
   - name: Run rcup to Deploy Dotfiles
     command: "rcup {{ rcup_args }}"
     become_user: agentydragon_gmail.com
+  - name: Clone scripts
+    become_user: agentydragon_gmail_com
+    git:
+      repo: https://github.com/agentydragon/scripts
+      dest: /home/agentydragon_gmail_com/bin
 # TODO: disable Cinnamon window effects
 # TODO: deploy my dotfiles via rcm
 #   - git clone git@github.com:agentydragon/dotfiles .dotfiles
