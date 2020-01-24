@@ -1,53 +1,47 @@
 ---
-# TODO: telegram
-
 # laptop:
-#  - blueman
-#  - tuxguitar
-#  - dropbox
-#  - qshutdown
-#  - gimp
-#  - krita
-#  - perl
-#  - slic3r
-#  - steam
-#  - transmission-gtk
-#  - virtualbox
-#  - virtualbox-dkms
-#  - wireshark
-#  - wine-stable
 #  - acpi
 #  - alarm-clock-applet
 #  - android-tools-adb
 #  - blender
-#  - vinagre --- remote desktop
-#  - zoom    --- for meetings
-#  - xournal
-#  - xserver-xorg-video-intel
-#  - openjdk-8-jdk
-#  - playonlinux
-#  - rescuetime
+#  - blueman
 #  - bolt   (for multiple graphic cards)
-#  - ifupdown
-#  - pencil2d
-#  - gnupg
-#  - gpgv
-#  - gnupg-agent
-#  - gnupg-l10n
+#  - chrome-gnome-shell
+#  - dropbox
 #  - gnome-shell
 #  - gnome-tweaks
-#  - google-cloud-sdk
+#  - gnupg
+#  - gnupg-agent
+#  - gnupg-l10n
 #  - google-musicmanager-beta
+#  - gpgv
+#  - krita
+#  - openjdk-8-jdk
+#  - perl
+#  - playonlinux
+#  - qshutdown
+#  - rescuetime
+#  - slic3r
+#  - steam
+#  - transmission-gtk
+#  - tuxguitar
 #  - ubuntu-desktop
 #  - ubuntu-gnome-desktop
 #  - ubuntu-restricted-extras
-#  - chrome-gnome-shell
-#  - vagrant
-#  - bsdutils
+#  - virtualbox
+#  - virtualbox-dkms
+#  - wine-stable
+#  - wireshark
+#  - xournal
+#  - xserver-xorg-video-intel
+#  - zoom    --- for meetings
 
 - hosts: cloudragon
   vars:
     my_user: agentydragon_gmail_com
+    home_path: "/home/{{ my_user }}"
+    scripts_path: "{{ home_path }}/bin"
+    dotfiles_path: "{{ home_path }}/.dotfiles"
   remote_user: "{{ my_user }}"
   tasks:
   - name: add Bazel repo
@@ -80,6 +74,7 @@
       - diffutils
       - fonts-powerline
       - geeqie
+      - gimp
       - git
       - htop
       - iotop
@@ -99,6 +94,7 @@
       - sed
       - tree
       - vim-gtk
+      - vinagre
       - wget
       - xclip
       - zsh
@@ -123,6 +119,7 @@
       - clang-format
       - cloc
       - gcc
+      - google-cloud-sdk
       - ghc
       - gitk
       - gnuplot
@@ -216,30 +213,30 @@
     block:
     - name: Check to See if Git Repo Exists
       stat:
-        path: "/home/{{ my_user }}/.dotfiles"
+        path: "{{ dotfiles_path }}"
       register: stat_repo
     - name: clone dotfiles
       git:
         repo: https://github.com/agentydragon/dotfiles
-        dest: "/home/{{ my_user }}/.dotfiles"
+        dest: "{{ dotfiles_path }}"
       when: stat_repo.stat.exists is not defined or stat_repo.stat.exists == false
     # TODO: maybe pull dotfiles to latest version?
     # TODO: problem: this is interactive if the files already exist.
     #  - set_fact:
     #      # Running without -f, so existing dotfiles won't be overwritten.
-    #      rcup_args: "-x README.md -x LICENSE -d /home/{{ my_user }}/.dotfiles -B cloudragon"
+    #      rcup_args: "-x README.md -x LICENSE -d {{ dotfiles_path }} -B cloudragon"
     #  - name: Run rcup to Deploy Dotfiles
     #    command: "rcup {{ rcup_args }}"
   - name: Set up custom scripts
     block:
     - name: Check to See if Git Repo Exists
       stat:
-        path: "/home/{{ my_user }}/scripts"
+        path: "{{ scripts_path }}"
       register: stat_scripts
     - name: Clone scripts
       git:
         repo: https://github.com/agentydragon/scripts
-        dest: "/home/{{ my_user }}/bin"
+        dest: "{{ scripts_path }}"
       when: stat_scripts.stat.exists is not defined or stat_scripts.stat.exists == false
 
   - name: Vim setup
@@ -273,7 +270,7 @@
   # TODO: might not be needed anymore
   - name: add github's key to known hosts
     blockinfile:
-      path: "/home/{{ my_user }}/.ssh/known_hosts"
+      path: "{{ home_path }}/.ssh/known_hosts"
       create: true
       # The following key comes from the github.com pubkey as of 2020-01-24.
       # Retrieved with:
@@ -340,5 +337,5 @@
   - name: Download Java formatter
     get_url:
       url: https://github.com/google/google-java-format/releases/download/google-java-format-1.7/google-java-format-1.7-all-deps.jar
-      dest: "/home/{{ my_user }}/bin/google-java-format.jar"
+      dest: "{{ scripts_path }}/google-java-format.jar"
   # TODO: worthy
