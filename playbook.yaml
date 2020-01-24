@@ -340,3 +340,4 @@
     get_url:
       url: https://github.com/google/google-java-format/releases/download/google-java-format-1.7/google-java-format-1.7-all-deps.jar
       dest: "/home/{{ my_user }}/bin/google-java-format.jar"
+  # TODO: worthy
