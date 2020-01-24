@@ -302,11 +302,12 @@
             gsettings get org.gnome.Terminal.ProfilesList list | tr -d "[]\',"
           register: profile_uuid
         - name: Set up gnome-terminal-colors-solarized
+          # dircolors are already in dotfiles.
           command: |
             dbus-launch {{ temp_dir.path }}/install.sh
               -s light
               -p {{ profile_uuid.stdout }}
-              --install-dircolors
+              --skip-dircolors
     - name: hide gnome-terminal menu
       command: |
         gsettings set
