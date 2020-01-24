@@ -1,68 +1,105 @@
+# Google signing key: wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+# commented out chrome-remote-desktop apt source
+
 ---
 - hosts: cloudragon
   remote_user: agentydragon_gmail_com
-  become: yes
   tasks:
   - name: update everything
+    become: yes
     apt:
       update_cache: yes
       upgrade: dist
   - name: install packages
+    become: yes
     apt:
       pkg:
       - anki
       - vim
       - rcm
+      - cinnamon-desktop-environment
+  - name: install chrome
+    become: yes
+    apt:
+      deb: https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+
+  # Installation steps for Chrome Remote Desktop.
+  # https://cloud.google.com/solutions/chrome-desktop-remote-on-compute-engine
+  - name: install chrome remote desktop, chrome
+    become: yes
+    apt:
+      deb: https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
+  - name: set 2d cinnamon
+    become: yes
+    copy:
+      content: "exec /etc/X11/Xsession /usr/bin/cinnamon-session-cinnamon2d"
+      dest: /etc/chrome-remote-desktop-session
+  # fails with "no such service"
+  #- name: disable display manager
+  #  systemd:
+  #    name: lightdm.service
+  #    enabled: no
+  #
+  - name: Check to See if Git Repo Exists
+    stat:
+      path: /home/agentydragon_gmail_com/.dotfiles
+    register: stat_repo
+  - name: clone dotfiles
+    git:
+      repo: https://github.com/agentydragon/dotfiles
+      dest: /home/agentydragon_gmail_com/.dotfiles
+    when: stat_repo.stat.exists is not defined or stat_repo.stat.exists == false
+  # TODO: maybe pull dotfiles to latest version?
+
+# TODO: problem: this is interactive if the files already exist.
+#  - set_fact:
+#      # Running without -f, so existing dotfiles won't be overwritten.
+#      rcup_args: "-x README.md -x LICENSE -d /home/agentydragon_gmail_com/.dotfiles -B cloudragon"
+#  - name: Run rcup to Deploy Dotfiles
+#    command: "rcup {{ rcup_args }}"
+  - name: Check to See if Git Repo Exists
+    stat:
+      path: /home/agentydragon_gmail_com/.dotfiles
+    register: stat_scripts
+  - name: Clone scripts
+    git:
+      repo: https://github.com/agentydragon/scripts
+      dest: /home/agentydragon_gmail_com/bin
+    when: stat_scripts.stat.exists is not defined or stat_scripts.stat.exists == false
+  - name: Check Vundle
+    stat:
+      path: /home/agentydragon_gmail_com/.vim/bundle/Vundle.vim
+    register: stat_vundle
+  - name: Clone Vundle
+    git:
+      repo: https://github.com/VundleVim/Vundle.vim.git
+      dest: /home/agentydragon_gmail_com/.vim/bundle/Vundle.vim
+    when: stat_vundle.stat.exists is not defined or stat_vundle.stat.exists == false
+  # TODO: update Vundle
+  #
+# issue: do *NOT* add the "url "git@github.com:" in .gitconfig
+
+
+# TODO: disable Cinnamon window effects
+# TODO: create a password for the user to avoid lock screen
+# TODO: configure anki with a password
   - name: apply dconf configuration
-    become_user: agentydragon_gmail_com
     dconf:
       key: /org/cinnamon/enabled-applets
       value: "['panel1:right:0:systray@cinnamon.org:0', 'panel1:left:0:menu@cinnamon.org:1', 'panel1:left:1:show-desktop@cinnamon.org:2', 'panel1:left:2:grouped-window-list@cinnamon.org:3', 'panel1:right:1:keyboard@cinnamon.org:4', 'panel1:right:2:notifications@cinnamon.org:5', 'panel1:right:3:removable-drives@cinnamon.org:6', 'panel1:right:5:bluetooth@cinnamon.org:7', 'panel1:right:6:network@cinnamon.org:8', 'panel1:right:7:sound@cinnamon.org:9', 'panel1:right:8:power@cinnamon.org:10', 'panel1:right:9:calendar@cinnamon.org:11']"
   - name: apply dconf configuration 2
-    become_user: agentydragon_gmail_com
     dconf:
       key: /org/cinnamon/favorite-apps
       value: "['cinnamon-settings.desktop', 'org.gnome.Terminal.desktop', 'nemo.desktop', 'google-chrome.desktop']"
-
-  # Installation steps for Chrome Remote Desktop.
-  # https://cloud.google.com/solutions/chrome-desktop-remote-on-compute-engine
-  - name: install cinnamon
-    apt:
-      pkg:
-      - cinnamon-desktop-environment
-  - name: install chrome remote desktop
-    apt:
-      deb: https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
-  - name: install chrome
-    apt:
-      deb: https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-  - name: set 2d cinnamon
-    copy:
-      content: "exec /etc/X11/Xsession /usr/bin/cinnamon-session-cinnamon2d"
-      dest: /etc/chrome-remote-desktop-session
-  - name: disable display manager
-    systemd:
-      name: lightdm.service
-      enabled: no
-  - name: clone dotfiles
-    become_user: agentydragon_gmail_com
-    git:
-      repo: https://github.com/agentydragon/dotfiles
-      dest: /home/agentydragon_gmail_com/.dotfiles
-  - set_fact:
-    # Running without -f, so existing dotfiles won't be overwritten.
-    rcup_args: "-x README.md -x LICENSE -d /home/agentydragon_gmail_com/.dotfiles"
-  - name: Run rcup to Deploy Dotfiles
-    command: "rcup {{ rcup_args }}"
-    become_user: agentydragon_gmail.com
-  - name: Clone scripts
-    become_user: agentydragon_gmail_com
-    git:
-      repo: https://github.com/agentydragon/scripts
-      dest: /home/agentydragon_gmail_com/bin
-# TODO: disable Cinnamon window effects
-# TODO: deploy my dotfiles via rcm
-#   - git clone git@github.com:agentydragon/dotfiles .dotfiles
-#   - rcup
-# TODO: create a password for the user to avoid lock screen
-# TODO: configure anki with a password
+  - name: add github's key to known hosts
+    blockinfile:
+      path: /home/agentydragon_gmail_com/.ssh/known_hosts
+      create: true
+      # The following key comes from the github.com pubkey as of 2020-01-24.
+      # Retrieved with:
+      #   ssh-keyscan -t rsa github.com
+      block: |
+        github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
+  - name: install vim plugins
+    # https://stackoverflow.com/questions/33672491/how-to-use-ansible-to-provision-vim-vundle-plugin
+    shell: vim -E -c "source ~/.vimrc" -c PluginInstall -c qa
