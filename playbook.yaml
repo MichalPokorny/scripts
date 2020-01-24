@@ -119,7 +119,7 @@
       - clang-format
       - cloc
       - gcc
-      - google-cloud-sdk
+      # broken: google-cloud-sdk
       - ghc
       - gitk
       - gnuplot
