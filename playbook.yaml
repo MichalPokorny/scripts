@@ -337,7 +337,6 @@
       name:
       - slack
   - name: Download Java formatter
-    command: |
-      wget \
-        https://github.com/google/google-java-format/releases/download/google-java-format-1.7/google-java-format.jar \
-        -O /home/{{ my_user }}/bin/google-java-format.jar
+    get_url:
+      url: https://github.com/google/google-java-format/releases/download/google-java-format-1.7/google-java-format-1.7-all-deps.jar
+      dest: "/home/{{ my_user }}/bin/google-java-format.jar"
