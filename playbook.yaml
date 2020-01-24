@@ -1,0 +1,63 @@
+---
+- hosts: cloudragon
+  remote_user: agentydragon_gmail_com
+  become: yes
+  tasks:
+  - name: update everything
+    apt:
+      update_cache: yes
+      upgrade: dist
+  - name: install packages
+    apt:
+      pkg:
+      - anki
+      - vim
+      - rcm
+  - name: apply dconf configuration
+    become_user: agentydragon_gmail_com
+    dconf:
+      key: /org/cinnamon/enabled-applets
+      value: "['panel1:right:0:systray@cinnamon.org:0', 'panel1:left:0:menu@cinnamon.org:1', 'panel1:left:1:show-desktop@cinnamon.org:2', 'panel1:left:2:grouped-window-list@cinnamon.org:3', 'panel1:right:1:keyboard@cinnamon.org:4', 'panel1:right:2:notifications@cinnamon.org:5', 'panel1:right:3:removable-drives@cinnamon.org:6', 'panel1:right:5:bluetooth@cinnamon.org:7', 'panel1:right:6:network@cinnamon.org:8', 'panel1:right:7:sound@cinnamon.org:9', 'panel1:right:8:power@cinnamon.org:10', 'panel1:right:9:calendar@cinnamon.org:11']"
+  - name: apply dconf configuration 2
+    become_user: agentydragon_gmail_com
+    dconf:
+      key: /org/cinnamon/favorite-apps
+      value: "['cinnamon-settings.desktop', 'org.gnome.Terminal.desktop', 'nemo.desktop', 'google-chrome.desktop']"
+
+  # Installation steps for Chrome Remote Desktop.
+  # https://cloud.google.com/solutions/chrome-desktop-remote-on-compute-engine
+  - name: install cinnamon
+    apt:
+      pkg:
+      - cinnamon-desktop-environment
+  - name: install chrome remote desktop
+    apt:
+      deb: https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
+  - name: install chrome
+    apt:
+      deb: https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+  - name: set 2d cinnamon
+    copy:
+      content: "exec /etc/X11/Xsession /usr/bin/cinnamon-session-cinnamon2d"
+      dest: /etc/chrome-remote-desktop-session
+  - name: disable display manager
+    systemd:
+      name: lightdm.service
+      enabled: no
+  - name: clone dotfiles
+    become_user: agentydragon_gmail_com
+    git:
+      repo: https://github.com/agentydragon/dotfiles
+      dest: /home/agentydragon_gmail_com/.dotfiles
+  - set_fact:
+    # Running without -f, so existing dotfiles won't be overwritten.
+    rcup_args: "-x README.md -x LICENSE -d /home/agentydragon_gmail_com/.dotfiles"
+  - name: Run rcup to Deploy Dotfiles
+    command: "rcup {{ rcup_args }}"
+    become_user: agentydragon_gmail.com
+# TODO: disable Cinnamon window effects
+# TODO: deploy my dotfiles via rcm
+#   - git clone git@github.com:agentydragon/dotfiles .dotfiles
+#   - rcup
+# TODO: create a password for the user to avoid lock screen
+# TODO: configure anki with a password
