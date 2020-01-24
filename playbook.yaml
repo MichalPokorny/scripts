@@ -44,12 +44,26 @@
     dotfiles_path: "{{ home_path }}/.dotfiles"
   remote_user: "{{ my_user }}"
   tasks:
+  - name: add Bazel release key
+    become: yes
+    apt_key:
+      # TODO: integrity check
+      url: https://bazel.build/bazel-release.pub.gpg
   - name: add Bazel repo
     become: yes
-    shell: |
+    apt_repository:
+      repo: "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8"
+      filename: bazel
+  - name: add Google release key
+    become: yes
+    apt_key:
       # TODO: integrity check
-      curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
-      echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+      url: https://dl-ssl.google.com/linux/linux_signing_key.pub
+  - name: add Google Chrome repo
+    become: yes
+    apt_repository:
+      repo: "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main"
+      filename: google-chrome
   # TODO: update when Docker works on Eoan
   #  - name: add Docker PPA
   #    become: yes
@@ -76,6 +90,7 @@
       - geeqie
       - gimp
       - git
+      - google-chrome-stable
       - htop
       - iotop
       - iputils-ping
@@ -139,10 +154,6 @@
       - silversearcher-ag
       - sloccount
       - tidy  # HTML tidy
-  - name: install chrome
-    become: yes
-    apt:
-      deb: https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 
   # Installation steps for Chrome Remote Desktop.
   # https://cloud.google.com/solutions/chrome-desktop-remote-on-compute-engine
@@ -159,18 +170,22 @@
         dest: /etc/chrome-remote-desktop-session
     - name: disable screensaver to not get locked out of VM (with no password)
       block:
-        - dconf:
+        - name: disable locking on screensaver
+          dconf:
             key: /org/cinnamon/desktop/screensaver/lock-enabled
             value: "false"
-        - dconf:
+        - name: disable automatic screensaver when idle
+          dconf:
             key: /org/cinnamon/desktop/screensaver/session/idle-delay
             value: "uint32 0"
-        - dconf:
+        - name: disable locking on suspend
+          dconf:
             key: /org/cinnamon/settings-daemon/plugins/power/lock-on-suspend
             value: "false"
     - name: disable desktop effects (for faster remote desktop)
       block:
-        - dconf:
+        - name: disable desktop effects
+          dconf:
             key: /org/cinnamon/desktop-effects
             value: "false"
         - dconf:
@@ -211,15 +226,11 @@
 
   - name: Set up dotfiles
     block:
-    - name: Check to See if Git Repo Exists
-      stat:
-        path: "{{ dotfiles_path }}"
-      register: stat_repo
     - name: clone dotfiles
       git:
         repo: https://github.com/agentydragon/dotfiles
         dest: "{{ dotfiles_path }}"
-      when: stat_repo.stat.exists is not defined or stat_repo.stat.exists == false
+        #when: stat_repo.stat.exists is not defined or stat_repo.stat.exists == false
     # TODO: maybe pull dotfiles to latest version?
     # TODO: problem: this is interactive if the files already exist.
     #  - set_fact:
@@ -228,16 +239,9 @@
     #  - name: Run rcup to Deploy Dotfiles
     #    command: "rcup {{ rcup_args }}"
   - name: Set up custom scripts
-    block:
-    - name: Check to See if Git Repo Exists
-      stat:
-        path: "{{ scripts_path }}"
-      register: stat_scripts
-    - name: Clone scripts
-      git:
-        repo: https://github.com/agentydragon/scripts
-        dest: "{{ scripts_path }}"
-      when: stat_scripts.stat.exists is not defined or stat_scripts.stat.exists == false
+    git:
+      repo: https://github.com/agentydragon/scripts
+      dest: "{{ scripts_path }}"
 
   - name: Vim setup
     block:
@@ -265,18 +269,8 @@
         value: "['panel1:right:0:systray@cinnamon.org:0', 'panel1:left:0:menu@cinnamon.org:1', 'panel1:left:1:show-desktop@cinnamon.org:2', 'panel1:left:2:grouped-window-list@cinnamon.org:3', 'panel1:right:1:keyboard@cinnamon.org:4', 'panel1:right:2:notifications@cinnamon.org:5', 'panel1:right:3:removable-drives@cinnamon.org:6', 'panel1:right:5:bluetooth@cinnamon.org:7', 'panel1:right:6:network@cinnamon.org:8', 'panel1:right:7:sound@cinnamon.org:9', 'panel1:right:8:power@cinnamon.org:10', 'panel1:right:9:calendar@cinnamon.org:11']"
     - dconf:
         key: /org/cinnamon/favorite-apps
-        value: "['cinnamon-settings.desktop', 'org.gnome.Terminal.desktop', 'nemo.desktop', 'google-chrome.desktop']"
+        value: "['cinnamon-settings.desktop', 'org.gnome.Terminal.desktop', 'nemo.desktop', 'google-chrome.desktop', 'telegram-desktop_telegramdesktop.desktop']"
 
-  # TODO: might not be needed anymore
-  - name: add github's key to known hosts
-    blockinfile:
-      path: "{{ home_path }}/.ssh/known_hosts"
-      create: true
-      # The following key comes from the github.com pubkey as of 2020-01-24.
-      # Retrieved with:
-      #   ssh-keyscan -t rsa github.com
-      block: |
-        github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
   - name: gnome-terminal
     tags:
       - gnome-terminal
@@ -290,7 +284,8 @@
             suffix: gnome-terminal-solarized
           register: temp_dir
         # TODO: would be nice to check integrity, with a particular commit
-        - git:
+        - name: Clone gnome-terminal-colors-solatized
+          git:
             repo: https://github.com/aruhier/gnome-terminal-colors-solarized
             dest: "{{ temp_dir.path }}"
             depth: 1
@@ -309,11 +304,41 @@
       command: |
         gsettings set
           org.gnome.Terminal.Legacy.Settings default-show-menubar false
+
+    - name: set terminal font
+      dconf:
+        key: "/org/gnome/terminal/legacy/profiles:/:{{ profile_uuid.stdout }}/font"
+        value: "'Ubuntu Mono 14'"
+    - name: set background color
+      dconf:
+        key: "/org/gnome/terminal/legacy/profiles:/:{{ profile_uuid.stdout }}/background-color"
+        value: "'rgb(253,246,227)'"
+    - name: set foreground color
+      dconf:
+        key: "/org/gnome/terminal/legacy/profiles:/:{{ profile_uuid.stdout }}/foreground-color"
+        value: "'rgb(101,123,131)'"
+    - name: set foreground color
+      dconf:
+        key: "/org/gnome/terminal/legacy/profiles:/:{{ profile_uuid.stdout }}/palette"
+        value: "['rgb(7,54,66)', 'rgb(220,50,47)', 'rgb(133,153,0)', 'rgb(181,137,0)', 'rgb(38,139,210)', 'rgb(211,54,130)', 'rgb(42,161,152)', 'rgb(238,232,213)', 'rgb(0,43,54)', 'rgb(203,75,22)', 'rgb(88,110,117)', 'rgb(101,123,131)', 'rgb(131,148,150)', 'rgb(108,113,196)', 'rgb(147,161,161)', 'rgb(253,246,227)']"
+        #- name: set gsettings fg color
+        #  shell: >
+        #    gsettings set
+        #      org.gnome.Terminal.Legacy.Profile:/:{{ profile_uuid.stdout }}/palette
+        #      "['#2E3436', '#CC0000', '#4E9A06', '#C4A000', '#3465A4', '#75507B', '#06989A', '#D3D7CF', '#555753', '#EF2929', '#8AE234', '#FCE94F', '#729FCF', '#AD7FA8', '#34E2E2', '#EEEEEC']"
+# gsettings reset-recursively org.gnome.Terminal.Legacy.Profile:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9/
+
+    - name: use theme colors
+      dconf:
+        key: "/org/gnome/terminal/legacy/profiles:/:{{ profile_uuid.stdout }}/use-theme-colors"
+        value: "false"
+    - name: do not use system font
+      dconf:
+        key: "/org/gnome/terminal/legacy/profiles:/:{{ profile_uuid.stdout }}/use-system-font"
+        value: "false"
+
     # TODO: set a scrollbar policy?
     # TODO: scrollback limit - not 10k?
-    # TODO: use ubuntu mono font in terminal
-    # gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/" default-size-columns 150
-    # TODO: set font size
   - name: Set custom datetime indicator
     block:
     - dconf:
