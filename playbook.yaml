@@ -50,6 +50,22 @@
     my_user: agentydragon_gmail_com
   remote_user: "{{ my_user }}"
   tasks:
+  - name: add Bazel repo
+    become: yes
+    shell: |
+      # TODO: integrity check
+      curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
+      echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+  # TODO: update when Docker works on Eoan
+  #  - name: add Docker PPA
+  #    become: yes
+  #    shell: |
+  #      # TODO: integrity check
+  #      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  #      echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+  #  - apt:
+  #    pkg:
+  #    - docker-ce
   - name: update everything
     become: yes
     apt:
@@ -106,7 +122,6 @@
       - clang
       - clang-format
       - cloc
-      - docker-ce
       - gcc
       - ghc
       - gitk
@@ -312,9 +327,15 @@
     - dconf:
         key: /com/canonical/indicator/datetime/show-week-numbers
         value: "true"
-  - snap:
+  - become: true
+    snap:
       name:
-        - telegram-desktop
+      - telegram-desktop
+  - become: true
+    snap:
+      classic: true
+      name:
+      - slack
   - name: Download Java formatter
     command: |
       wget \
