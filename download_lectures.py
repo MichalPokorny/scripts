@@ -9,6 +9,7 @@ from absl import flags
 FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('chunk', 5, 'lecture chunk size')
+flags.DEFINE_string('path', None, 'out path')
 
 
 def wait_for_finish(processes):
@@ -24,6 +25,7 @@ def main(_):
         # TODO: https://is.mff.cuni.cz/prednasky/prednaska/NOFY003/1
         # TODO: https://is.mff.cuni.cz/prednasky/prednaska/NOFY031/1
         # TODO: https://is.mff.cuni.cz/prednasky/prednaska/NTMF111/1
+        ('NDMI011', 2016, 'LS', 'combinatorics-graphs-1'): 13,
         ('NDMI012', 2016, 'ZS', 'combinatorics-graphs-2'): 13,
         ('NMAF051', 2014, 'ZS', 'mathematical-analysis-1'): 23,
         ('NMAF052', 2014, 'LS', 'mathematical-analysis-2'): 27,
@@ -41,7 +43,7 @@ def main(_):
     # TODO: kill all processes on our death
     processes = {}
     for (code, year, semester, name), n in m.items():
-        d = f'{code}-{name}'
+        d = os.path.join(FLAGS.path, f'{code}-{name}')
         os.makedirs(d, exist_ok=True)
         for num in range(1, n+1):
             in_filename = f'{code}_{year}_{semester}_{num:02d}.webm'
@@ -64,4 +66,5 @@ def main(_):
     wait_for_finish(processes)
 
 if __name__ == '__main__':
+    flags.mark_flag_as_required('path')
     app.run(main)
