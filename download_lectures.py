@@ -12,11 +12,6 @@ flags.DEFINE_integer('chunk', 5, 'lecture chunk size')
 flags.DEFINE_string('path', None, 'out path')
 
 
-def wait_for_finish(processes):
-    for i, (name, process) in enumerate(processes.items(), 1):
-        logging.info(f'waiting for {i:02d} of {len(processes):02d}: {name}')
-        process.wait()
-
 def main(_):
     m = {
         # TODO: https://is.mff.cuni.cz/prednasky/prednaska/NMAF061/1
@@ -41,29 +36,18 @@ def main(_):
         ('NTIN071', 2018, 'LS', 'automata'): 13,
     }
     # TODO: kill all processes on our death
-    processes = {}
     for (code, year, semester, name), n in m.items():
         d = os.path.join(FLAGS.path, f'{code}-{name}')
         os.makedirs(d, exist_ok=True)
-        for num in range(1, n+1):
-            in_filename = f'{code}_{year}_{semester}_{num:02d}.webm'
-            url = f'https://is.mff.cuni.cz/prednasky/play/s14vh2ea9emlr65v6rnd1pgn4p/{in_filename}'
-            out_filename = f'{d}/{num:02d}.webm'
-            processes[out_filename] = subprocess.Popen([
-                'curl',
-                '--output', out_filename,
-                # Autoresume.
-                '--continue-at', '-',
-                # Disable progress bar, but do write out errors.
-                '--silent', '--show-error',
-                url,
-            ])
-            if len(processes) >= FLAGS.chunk:
-                # Flush.
-                wait_for_finish(processes)
-                processes = {}
-
-    wait_for_finish(processes)
+        url_pattern = f'https://is.mff.cuni.cz/prednasky/play/s14vh2ea9emlr65v6rnd1pgn4p/{code}_{year}_{semester}_[01-{n+1:02d}].webm'
+        args = [
+            'curl',
+            url_pattern,
+            '--output', f'#1.webm',
+            '--continue-at', '-',
+        ]
+        logging.info("running: %s", ' '.join(args))
+        subprocess.Popen(args, cwd=d).wait()
 
 if __name__ == '__main__':
     flags.mark_flag_as_required('path')
