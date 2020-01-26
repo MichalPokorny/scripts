@@ -34,7 +34,7 @@ def main(_):
         ('NOPT048', 2017, 'LS', 'optimalization-methods'): 13,
         ('NPFL122', 2019, 'ZS', 'deep-reinforcement-learning'): 10,
         ('NTIN060', 2014, 'LS', 'ads1'): 13,
-        ('NTIN071', 2018, 'LS', 'automata'): 13,
+        # ('NTIN071', 2018, 'LS', 'automata'): 13,
     }
     # TODO: kill all processes on our death
     for (code, year, semester, name), n in m.items():
