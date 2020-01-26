@@ -10,6 +10,7 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('chunk', 5, 'lecture chunk size')
 flags.DEFINE_string('path', None, 'out path')
+flags.DEFINE_string('secret', None, 'URL token')
 
 
 def main(_):
@@ -39,7 +40,7 @@ def main(_):
     for (code, year, semester, name), n in m.items():
         d = os.path.join(FLAGS.path, f'{code}-{name}')
         os.makedirs(d, exist_ok=True)
-        url_pattern = f'https://is.mff.cuni.cz/prednasky/play/s14vh2ea9emlr65v6rnd1pgn4p/{code}_{year}_{semester}_[01-{n+1:02d}].webm'
+        url_pattern = f'https://is.mff.cuni.cz/prednasky/play/{FLAGS.secret}/{code}_{year}_{semester}_[01-{n+1:02d}].webm'
         args = [
             'curl',
             url_pattern,
