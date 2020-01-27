@@ -363,4 +363,8 @@
     get_url:
       url: https://github.com/google/google-java-format/releases/download/google-java-format-1.7/google-java-format-1.7-all-deps.jar
       dest: "{{ scripts_path }}/google-java-format.jar"
+  - name: Remove Blueman for server
+    apt:
+      name: blueman
+      state: absent
   # TODO: worthy
