@@ -1,5 +1,1 @@
 .*.sw*
-private-scripts
-
-# From the Dropbox distribution
-dropbox.py
