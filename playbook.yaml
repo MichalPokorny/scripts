@@ -1,69 +1,16 @@
 ---
-# laptop:
-#  - acpi
-#  - alarm-clock-applet
-#  - android-tools-adb
-#  - blender
-#  - blueman
-#  - bolt   (for multiple graphic cards)
-#  - chrome-gnome-shell
-#  - dropbox
-#  - gnome-shell
-#  - gnome-tweaks
-#  - gnupg
-#  - gnupg-agent
-#  - gnupg-l10n
-#  - google-musicmanager-beta
-#  - gpgv
-#  - krita
-#  - openjdk-8-jdk
-#  - perl
-#  - playonlinux
-#  - qshutdown
-#  - rescuetime
-#  - slic3r
-#  - steam
-#  - transmission-gtk
-#  - tuxguitar
-#  - ubuntu-desktop
-#  - ubuntu-gnome-desktop
-#  - ubuntu-restricted-extras
-#  - virtualbox
-#  - virtualbox-dkms
-#  - wine-stable
-#  - wireshark
-#  - xournal
-#  - xserver-xorg-video-intel
-#  - zoom    --- for meetings
-
 - hosts: cloudragon
   vars:
     my_user: agentydragon_gmail_com
     home_path: "/home/{{ my_user }}"
     scripts_path: "{{ home_path }}/bin"
+    local_scripts_path: "{{ home_path }}/.local/bin"
     dotfiles_path: "{{ home_path }}/.dotfiles"
   remote_user: "{{ my_user }}"
   tasks:
-  - name: add Bazel release key
-    become: yes
-    apt_key:
-      # TODO: integrity check
-      url: https://bazel.build/bazel-release.pub.gpg
-  - name: add Bazel repo
-    become: yes
-    apt_repository:
-      repo: "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8"
-      filename: bazel
-  - name: add Google release key
-    become: yes
-    apt_key:
-      # TODO: integrity check
-      url: https://dl-ssl.google.com/linux/linux_signing_key.pub
-  - name: add Google Chrome repo
-    become: yes
-    apt_repository:
-      repo: "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main"
-      filename: google-chrome
+  - file:
+      path: "{{ local_scripts_path }}"
+      state: directory
   # TODO: update when Docker works on Eoan
   #  - name: add Docker PPA
   #    become: yes
@@ -74,6 +21,7 @@
   #  - apt:
   #    pkg:
   #    - docker-ce
+  - include_tasks: google-repos.yaml
   - name: update everything
     become: yes
     apt:
@@ -113,116 +61,10 @@
       - wget
       - xclip
       - zsh
-  - name: install Anki
-    become: yes
-    apt:
-      pkg:
-      - anki
-      - dvipng        # for Anki cards
-      - fonts-roboto  # for Anki cards
-      - texlive-full  # for Anki cards
-      - youtube-dl    # for Anki cards
-  - name: install dev env
-    become: yes
-    apt:
-      pkg:
-      - ansible
-      - asciidoc
-      - bazel
-      - cabal-install
-      - clang
-      - clang-format
-      - cloc
-      - gcc
-      # broken: google-cloud-sdk
-      - ghc
-      - gitk
-      - gnuplot
-      - golang
-      - gradle
-      - jshon
-      - jupyter-nbconvert
-      - make
-      - markdown
-      - maven
-      - npm
-      - protobuf-compiler
-      - pyqt5-dev-tools
-      - python3
-      - python3-pip
-      - ruby
-      - silversearcher-ag
-      - sloccount
-      - tidy  # HTML tidy
+  - include_tasks: anki.yaml
+  - include_tasks: dev-env.yaml
 
-  # Installation steps for Chrome Remote Desktop.
-  # https://cloud.google.com/solutions/chrome-desktop-remote-on-compute-engine
-  - name: remote desktop
-    block:
-    - name: install chrome remote desktop, chrome
-      become: yes
-      apt:
-        deb: https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
-    - name: set 2d cinnamon
-      become: yes
-      copy:
-        content: "exec /etc/X11/Xsession /usr/bin/cinnamon-session-cinnamon2d"
-        dest: /etc/chrome-remote-desktop-session
-    - name: disable screensaver to not get locked out of VM (with no password)
-      block:
-        - name: disable locking on screensaver
-          dconf:
-            key: /org/cinnamon/desktop/screensaver/lock-enabled
-            value: "false"
-        - name: disable automatic screensaver when idle
-          dconf:
-            key: /org/cinnamon/desktop/screensaver/session/idle-delay
-            value: "uint32 0"
-        - name: disable locking on suspend
-          dconf:
-            key: /org/cinnamon/settings-daemon/plugins/power/lock-on-suspend
-            value: "false"
-    - name: disable desktop effects (for faster remote desktop)
-      block:
-        - name: disable desktop effects
-          dconf:
-            key: /org/cinnamon/desktop-effects
-            value: "false"
-        - dconf:
-            key: /org/cinnamon/desktop-effects-close-effect
-            value: "'traditional'"
-        - dconf:
-            key: /org/cinnamon/desktop-effects-map-effect
-            value: "'traditional'"
-        - dconf:
-            key: /org/cinnamon/desktop-effects-maximize-effect
-            value: "'none'"
-        - dconf:
-            key: /org/cinnamon/desktop-effects-minimize-effect
-            value: "'traditional'"
-        - dconf:
-            key: /org/cinnamon/desktop-effects-tile-effect
-            value: "'none'"
-        - dconf:
-            key: /org/cinnamon/desktop-effects-unmaximize-effect
-            value: "'none'"
-        - dconf:
-            key: /org/cinnamon/desktop-effects-on-dialogs
-            value: "false"
-        - dconf:
-            key: /org/cinnamon/desktop-effects-on-menus
-            value: "false"
-        - dconf:
-            key: /org/cinnamon/enable-vfade
-            value: "false"
-        - dconf:
-            key: /org/cinnamon/startup-animation
-            value: "false"
-    # fails with "no such service"
-    #- name: disable display manager
-    #  systemd:
-    #    name: lightdm.service
-    #    enabled: no
+  - include_tasks: chrome-remote-desktop.yaml
 
   - name: Set up dotfiles
     block:
@@ -230,7 +72,6 @@
       git:
         repo: https://github.com/agentydragon/dotfiles
         dest: "{{ dotfiles_path }}"
-        #when: stat_repo.stat.exists is not defined or stat_repo.stat.exists == false
     # TODO: maybe pull dotfiles to latest version?
     # TODO: problem: this is interactive if the files already exist.
     #  - set_fact:
@@ -243,24 +84,9 @@
       repo: https://github.com/agentydragon/scripts
       dest: "{{ scripts_path }}"
 
-  - name: Vim setup
-    block:
-    - name: Check Vundle
-      stat:
-        path: "/home/{{ my_user }}/.vim/bundle/Vundle.vim"
-      register: stat_vundle
-    - name: Clone Vundle
-      git:
-        repo: https://github.com/VundleVim/Vundle.vim.git
-        dest: "/home/{{ my_user }}/.vim/bundle/Vundle.vim"
-      when: stat_vundle.stat.exists is not defined or stat_vundle.stat.exists == false
-    - name: install vim plugins
-      # https://stackoverflow.com/questions/33672491/how-to-use-ansible-to-provision-vim-vundle-plugin
-      shell: vim -E -c "source ~/.vimrc" -c PluginInstall -c qa
-    # TODO: update Vundle
+  - include_tasks: vim.yaml
 
-# TODO: maybe create a password for the user to avoid lock screen?
-# TODO: configure anki with a password
+  # TODO: configure anki with a password
 
   - name: set applets and favorite apps
     block:
@@ -275,81 +101,23 @@
     tags:
       - gnome-terminal
     block:
-    - name: Set gnome-terminal to Solarized Light
-      tags:
-        - solarized
-      block:
-        - tempfile:
-            state: directory
-            suffix: gnome-terminal-solarized
-          register: temp_dir
-        # TODO: would be nice to check integrity, with a particular commit
-        - name: Clone gnome-terminal-colors-solatized
-          git:
-            repo: https://github.com/aruhier/gnome-terminal-colors-solarized
-            dest: "{{ temp_dir.path }}"
-            depth: 1
-        - name: Get gnome-terminal profile UUID
-          shell: >
-            gsettings get org.gnome.Terminal.ProfilesList list | tr -d "[]\',"
-          register: profile_uuid
-        - name: Set up gnome-terminal-colors-solarized
-          # dircolors are already in dotfiles.
-          command: |
-            dbus-launch {{ temp_dir.path }}/install.sh
-              -s light
-              -p {{ profile_uuid.stdout }}
-              --skip-dircolors
+    - include_tasks: gnome-terminal-solarized.yaml
     - name: hide gnome-terminal menu
       command: |
         gsettings set
           org.gnome.Terminal.Legacy.Settings default-show-menubar false
-
-    - name: set terminal font
-      dconf:
-        key: "/org/gnome/terminal/legacy/profiles:/:{{ profile_uuid.stdout }}/font"
-        value: "'Ubuntu Mono 14'"
-    - name: set background color
-      dconf:
-        key: "/org/gnome/terminal/legacy/profiles:/:{{ profile_uuid.stdout }}/background-color"
-        value: "'rgb(253,246,227)'"
-    - name: set foreground color
-      dconf:
-        key: "/org/gnome/terminal/legacy/profiles:/:{{ profile_uuid.stdout }}/foreground-color"
-        value: "'rgb(101,123,131)'"
-    - name: set foreground color
-      dconf:
-        key: "/org/gnome/terminal/legacy/profiles:/:{{ profile_uuid.stdout }}/palette"
-        value: "['rgb(7,54,66)', 'rgb(220,50,47)', 'rgb(133,153,0)', 'rgb(181,137,0)', 'rgb(38,139,210)', 'rgb(211,54,130)', 'rgb(42,161,152)', 'rgb(238,232,213)', 'rgb(0,43,54)', 'rgb(203,75,22)', 'rgb(88,110,117)', 'rgb(101,123,131)', 'rgb(131,148,150)', 'rgb(108,113,196)', 'rgb(147,161,161)', 'rgb(253,246,227)']"
-        #- name: set gsettings fg color
-        #  shell: >
-        #    gsettings set
-        #      org.gnome.Terminal.Legacy.Profile:/:{{ profile_uuid.stdout }}/palette
-        #      "['#2E3436', '#CC0000', '#4E9A06', '#C4A000', '#3465A4', '#75507B', '#06989A', '#D3D7CF', '#555753', '#EF2929', '#8AE234', '#FCE94F', '#729FCF', '#AD7FA8', '#34E2E2', '#EEEEEC']"
-# gsettings reset-recursively org.gnome.Terminal.Legacy.Profile:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9/
-
-    - name: use theme colors
-      dconf:
-        key: "/org/gnome/terminal/legacy/profiles:/:{{ profile_uuid.stdout }}/use-theme-colors"
-        value: "false"
     - name: do not use system font
       dconf:
         key: "/org/gnome/terminal/legacy/profiles:/:{{ profile_uuid.stdout }}/use-system-font"
         value: "false"
+    - name: set terminal font
+      dconf:
+        key: "/org/gnome/terminal/legacy/profiles:/:{{ profile_uuid.stdout }}/font"
+        value: "'Ubuntu Mono 14'"
 
     # TODO: set a scrollbar policy?
     # TODO: scrollback limit - not 10k?
-  - name: Set custom datetime indicator
-    block:
-    - dconf:
-        key: /com/canonical/indicator/datetime/time-format
-        value: "'custom'"
-    - dconf:
-        key: /com/canonical/indicator/datetime/custom-time-format
-        value: "'%Y-%m-%d %H:%M:%S'"
-    - dconf:
-        key: /com/canonical/indicator/datetime/show-week-numbers
-        value: "true"
+  - include_tasks: datetime-format.yaml
   - become: true
     snap:
       name:
@@ -359,10 +127,7 @@
       classic: true
       name:
       - slack
-  - name: Download Java formatter
-    get_url:
-      url: https://github.com/google/google-java-format/releases/download/google-java-format-1.7/google-java-format-1.7-all-deps.jar
-      dest: "{{ scripts_path }}/google-java-format.jar"
+  - include_tasks: dev-env.yaml
   - name: Remove Blueman for server
     apt:
       name: blueman
