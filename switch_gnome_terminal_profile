@@ -1,0 +1,37 @@
+#!/usr/bin/python3
+"""Switches all tabs of gnome-terminal to the selected profile.
+
+TODO: also change default profile"""
+
+# Requirements: absl-py
+
+import dbus
+from xml.etree import ElementTree
+from absl import app, flags
+
+_PROFILE = flags.DEFINE_string('profile', None,
+                               'UUID of profile to set everywhere')
+# solarized_dark = 'e451dfb9-1353-4407-ae2d-c136d77c1c11'
+# solarized_light = '90bdd513-cffc-4f0b-92cf-84a62186d9b2'
+
+
+def main(_):
+    bus = dbus.SessionBus()
+
+    obj = bus.get_object('org.gnome.Terminal', '/org/gnome/Terminal/window')
+    iface = dbus.Interface(obj, 'org.freedesktop.DBus.Introspectable')
+
+    tree = ElementTree.fromstring(iface.Introspect())
+    windows = [child.attrib['name'] for child in tree if child.tag == 'node']
+
+    for window in windows:
+        window_path = f'/org/gnome/Terminal/window/{window}'
+
+        obj = bus.get_object('org.gnome.Terminal', window_path)
+        iface = dbus.Interface(obj, 'org.gtk.Actions')
+        iface.SetState('profile', _PROFILE.value, [])
+
+
+if __name__ == '__main__':
+    flags.mark_flag_as_required(_PROFILE.name)
+    app.run(main)
